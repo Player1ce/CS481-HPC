@@ -18,7 +18,7 @@ namespace util {
     public:
         /// \brief Create a threadpool with num_threads threads.
         /// \param numThreads The number of threads in the pool
-        explicit ThreadPool(size_t numThreads) : _numWaiting(0), _numThreads(numThreads), _stop(false) {
+        explicit ThreadPool(const size_t numThreads) : _numWaiting(0), _numThreads(numThreads), _stop(false) {
             // create the threads and put them in a list
             for (size_t i = 0; i < numThreads; ++i) {
                 _workers.emplace_back([this] {
@@ -113,6 +113,9 @@ namespace util {
 //                std::cout << "wait done" << std::endl;
         }
 
+        [[nodiscard]] std::size_t getNumThreads() const {
+            return _numThreads;
+        }
 
     private:
         std::vector<std::thread> _workers;

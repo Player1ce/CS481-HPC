@@ -72,7 +72,7 @@ namespace util {
         }
 
         int incrementOffset() {
-            _offset += (_offset + 1) % (_maxOffset + 1);
+            _offset = (_offset + 1) % (_maxOffset + 1);
             return _offset;
         }
 
