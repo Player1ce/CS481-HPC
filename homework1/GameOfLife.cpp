@@ -10,6 +10,7 @@ using namespace std;
 
 #define DEBUG_LOGGING
 // #define CELL_MATRIX_DEBUG_LOGGING
+// #define CELL_UPDATE_DEBUG_LOGGING
 
 // row major
 class CellMatrix {
@@ -17,20 +18,20 @@ class CellMatrix {
     CellMatrix(int rows, int columns, int maxOffset = 1) 
         : _rows(rows),
           _columns(columns),
-          _offsetMax(maxOffset),
+          _maxOffset(maxOffset),
           _offset(0)
     {
-        _grid.resize(((rows * columns + 63) * _offsetMax) / 64);
+        _grid.resize(((rows * columns + 63) * (_maxOffset * 1)) / 64);
     }
 
     CellMatrix(int size, int maxOffset = 1) 
         : _rows(size),
           _columns(size),
-          _offsetMax(maxOffset),
+          _maxOffset(maxOffset),
           _offset(0)
 
     {
-        _grid.resize(((size * size + 63) * _offsetMax) / 64);
+        _grid.resize(((size * size + 63) * (_maxOffset + 1)) / 64);
     }
 
     void fillWithRandom(int min= 0, int max = 1) {
@@ -48,6 +49,13 @@ class CellMatrix {
         for (int i = 0; i < this->rows(); i++) {
             for (int j = 0; j < this->columns(); j++)
                 this->set(i, j, distribution(generator));
+        }
+    }
+
+    void setFromVector(vector<bool> list) {
+        for (int i = 0; i < this->rows(); i++) {
+            for (int j = 0; j < this->columns(); j++)
+                this->set(i, j, list.at(this->columns() * i + j));
         }
     }
 
@@ -72,15 +80,21 @@ class CellMatrix {
     }
 
     void set(int row, int column, bool val, int offset) {
-        if (offset > _offsetMax || offset < 0) {
+        if (offset > _maxOffset || offset < 0) {
             cout << "getRecieved invalid offset: " << offset << endl;
+        }
+
+        // create an infinite border of zeroes around the grid.
+        if (row < 0 || row > _columns || column < 0 || column > _rows) {
+            cout << "Error: Attempting to set out of range element will do nothing." << endl;
+            return;
         }
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
         cout << "inside main set row: " << row << " column: " << column << " val: " << val << " offset: " << offset << endl;
         #endif
 
-        int location = ((row * _columns + column) * _offsetMax) + offset;
+        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
         int index = location / 64;
         int bit = location % 64;
 
@@ -106,16 +120,24 @@ class CellMatrix {
     
 
     bool get(int row, int column, int offset) const {
-        if (offset > _offsetMax || offset < 0) {
+        if (offset > _maxOffset || offset < 0) {
             cout << "getRecieved invalid offset: " << offset << endl;
+        }
+
+        // create an infinite border of zeroes around the grid.
+        if (row < 0 || row >= _columns || column < 0 || column >= _rows) {
+            #ifdef CELL_MATRIX_DEBUG_LOGGING
+            cout << "Debug: Accessing out of range cell returning zero." << endl;
+            #endif
+
+            return false;
         }
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
         cout << "in main get() row: " << row << " column: " << column << " offset: " << offset << endl;
         #endif
 
-
-        int location = ((row * _columns + column) * _offsetMax) + offset;
+        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
         int index = location / 64;
         int bit = location % 64;
 
@@ -131,6 +153,19 @@ class CellMatrix {
         #endif 
 
         return (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
+    }
+
+    int getOffset() {
+        return _offset;
+    }
+
+    int getNextOffset() {
+        return (_offset + 1) % (_maxOffset + 1);
+    }
+
+    int incrementOffset() {
+        _offset += (_offset + 1) % (_maxOffset + 1);
+        return _offset;
     }
 
     int getSum() {
@@ -163,17 +198,85 @@ class CellMatrix {
     }
     
   private:
-
     vector<uint64_t> _grid;
     int _rows, _columns;
-    int _offsetMax = 1, _offset = 0;;
+    int _maxOffset = 1, _offset = 0;;
     uint8_t offset = 0;
 };
+
+
+bool getCellUpdate(CellMatrix &grid, int row, int column) {
+    int neighborsAlive = -grid.get(row, column);
+
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    cout << "[" << endl;
+    #endif
+
+    for (int i = -1; i <= 1; i++) {
+        #ifdef CELL_UPDATE_DEBUG_LOGGING
+        cout << "[";
+        #endif
+
+        for (int j = -1; j <=1; j++) {
+            #ifdef CELL_UPDATE_DEBUG_LOGGING
+            cout << " " << grid.get(row + i, column + j);
+            #endif
+
+            neighborsAlive += grid.get(row + i, column + j); 
+        }
+
+        #ifdef CELL_UPDATE_DEBUG_LOGGING
+        cout << "]" << endl;
+        #endif
+
+        if (neighborsAlive >= 4) {
+            break;
+        }
+    }
+
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    cout << "]" << endl;
+
+    cout << "val: " << neighborsAlive << endl;
+    #endif
+
+    switch (neighborsAlive) {
+            case (-1):
+            case (0):
+            case (1):
+                return false;
+            break;
+
+            case(2):
+                return grid.get(row, column) == 1;
+            break;
+
+            case(3):
+                return true;
+            break;
+
+            default:
+                return false;
+            break;
+    }
+}
+
+void updateCells(CellMatrix &matrix) {
+    int nextOffset = matrix.getNextOffset();
+    for (int i = 0; i < matrix.rows(); i++) {
+        for (int j = 0; j < matrix.columns(); j++) {
+            matrix.set(i, j, getCellUpdate(matrix, i, j), nextOffset);
+        }
+    }
+    matrix.incrementOffset();
+}
 
 int main(int argc, char** argv) {
     cout << "Hello World!" << endl;
 
     int size = 5;
+    int iterations = 1000;
+    int printThreshold = 101;
 
     CellMatrix matrix = CellMatrix(size);
 
@@ -183,63 +286,31 @@ int main(int argc, char** argv) {
 
     matrix.fillWithRandom();
 
+    // vector<bool> initializer = {
+    //     true, true, false,
+    //     true, true, false,
+    //     false, false, false
+    // };
+
+    // matrix.setFromVector(initializer);
+
     int sum = matrix.getSum();
 
-    cout << matrix << endl;
+    if (size < printThreshold) {
+        cout << matrix << endl;
+    }
 
+    for (int i = 0; i < iterations; i++) {
+        updateCells(matrix);
+    }
+
+    if (size < printThreshold) {
+        cout << "end matrix " << endl;
+        cout << matrix << endl;
+    }
 
     float percent = (sum / static_cast<float>(size*size)) * 100.0;
     cout << "percent: " << percent << endl;
 
     return 0;
-}
-
-
-
-
-struct Cell {
-    int x, y;
-    bool alive, change;
-};
-
-
-bool getCellUpdate(const vector<vector<bool>> &grid, int x, int y) {
-    int neighborsAlive = -1;
-    for (int i = -1; i <= 1; i++) {
-        for (int k = -1; k <=1; k++) {
-            neighborsAlive += grid.at(x + i).at(y + k); 
-        }
-        if (neighborsAlive >= 4) {
-            break;
-        }
-    }
-
-    if (neighborsAlive == -1) {
-        cout << "error, neighbors alive was -1 at x: " << x << " y: " << y;
-    }
-
-
-    if (grid.at(x).at(y)) {    
-        switch (neighborsAlive) {
-            case (0):
-            case (1):
-                return false;
-            break;
-
-            case(2):
-            case(3):
-                return true;
-            break;
-
-            default:
-                return false;
-            break;
-        }
-    }
-    else if (neighborsAlive == 3) {
-        return true;
-    }
-    else {
-        return false;
-    }
 }
