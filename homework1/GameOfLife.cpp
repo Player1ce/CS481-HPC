@@ -90,28 +90,69 @@ void updateCells(CellMatrix &matrix) {
 }
 
 // TODO: update this to do a block of updates per thread instead of a row and make it smart by using data read in previous updates
-void updateCellsUsingThreadPool(CellMatrix &matrix, ThreadPool &threadPool) {
+void updateCellsUsingThreadPool(CellMatrix &matrix, ThreadPool &threadPool, int numGroups = -1) {
     // cout << "Update Started" << endl;
+
+    if (numGroups == -1) {
+        numGroups = static_cast<int>(threadPool.getNumThreads());
+    } else if (numGroups == -2) {
+        numGroups = matrix.rows();
+    } else if (numGroups < 0) {
+        numGroups = static_cast<int>(threadPool.getNumThreads());
+    }
+
+    if (numGroups > matrix.rows()) {
+        numGroups = matrix.rows();
+    }
 
     const int nextOffset = matrix.getNextOffset();
 
+    int groupSize = matrix.rows()/numGroups;
+    int overhang = matrix.rows()%numGroups;
+    int previousOverhang = 0;
+    int allocatedOverhang = 0;
+
+    vector<pair<int, int>> rowGroups(numGroups);
+
+    for (int i = 0; i < numGroups; i++) {
+        rowGroups.at(i) = make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
+
+        if (i < overhang) {
+            rowGroups.at(i).second += 1;
+            previousOverhang = 1;
+            allocatedOverhang++;
+        } else {
+            previousOverhang = 0;
+        }
+    }
+
+    // cout << "[";
+    // for (int i = 0; i < rowGroups.size(); i++) {
+    //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    // }
+    // cout << "]" << endl;
+
     shared_mutex m;
 
-    for (int i = 0; i < matrix.rows(); i++) {
-        threadPool.enqueue([nextOffset, i
-            , &matrix
-            , &m
-            ] {
-        for (int j = 0; j < matrix.columns(); j++) {
-                // TODO: need to implement this lock in the CellMatrix at one point for efficiency
-                // shared_lock read_lock(m);
-                const bool update = getCellUpdate(matrix, i, j);
-                // read_lock.unlock();
+    for (auto & rowGroup : rowGroups) {
+    // for (int row = 0; row < matrix.rows(); row++) {
+        threadPool.enqueue([nextOffset
+            // , row
+            , &rowGroup
+            , &matrix, &m, &rowGroups] {
+            for (int row = rowGroup.first; row < rowGroup.second; row++) {
+                for (int col = 0; col < matrix.columns(); col++) {
+                        // TODO: need to implement this lock in the CellMatrix at one point for efficiency
+                        // shared_lock read_lock(m);
+                        const bool update = getCellUpdate(matrix, row, col);
+                        // read_lock.unlock();
 
-                // unique_lock write_lock(m);
-                matrix.set(i, j, update, nextOffset);
-                // write_lock.unlock();
-                    // cout << "i: " << i << ", j: " << j << endl;
+                        // unique_lock write_lock(m);
+                        matrix.set(row, col, update, nextOffset);
+                        // write_lock.unlock();
+
+                        // cout << "i: " << i << ", j: " << j << endl;
+                }
             }
         });
     }
@@ -135,7 +176,7 @@ int main(int argc, char** argv) {
 
     constexpr int size = 10000;
 
-    constexpr int iterations = 5000;
+    constexpr int iterations = 1000;
 
     constexpr int printCount = max(iterations / 10, 1);
 
@@ -184,7 +225,7 @@ int main(int argc, char** argv) {
 
         // updateCells(matrix);
 
-        updateCellsUsingThreadPool(matrix, threadPool);
+        updateCellsUsingThreadPool(matrix, threadPool, numThreads);
 
 
         if (i % printCount == 0) {
@@ -201,7 +242,7 @@ int main(int argc, char** argv) {
         cout << matrix << endl;
     }
 
-    float percent = (sum / static_cast<float>(size*size)) * 100.0;
+    const double percent = (sum / static_cast<double>(size*size)) * 100.0;
     cout << "percent: " << percent << endl;
 
     return 0;
