@@ -10,6 +10,11 @@
 #include <random>
 #include <vector>
 #include <sstream>
+#include <mutex>
+#include <memory>
+
+#define USE_ARRAY
+// #define USE_VECTOR
 
 namespace util {
     // row major
@@ -21,7 +26,14 @@ namespace util {
               _maxOffset(maxOffset),
               _offset(0)
         {
+            #ifdef USE_VECTOR
             _grid.resize(((rows * columns + 63) * (_maxOffset * 1)) / 64);
+            #endif
+
+            #ifdef USE_ARRAY
+            int arraySize = ((rows * columns + 63) * (_maxOffset * 1)) / 64;
+            _arrayGrid = new uint64_t[arraySize]();
+            #endif
         }
 
         explicit CellMatrix(const int size, const int maxOffset = 1)
@@ -31,12 +43,35 @@ namespace util {
               _offset(0)
 
         {
+            #ifdef USE_VECTOR
             _grid.resize(((size * size + 63) * (_maxOffset + 1)) / 64);
+            #endif
+
+            #ifdef USE_ARRAY
+            int arraySize = ((size * size + 63) * (_maxOffset * 1)) / 64;
+            _arrayGrid = new uint64_t[arraySize]();
+            #endif
+        }
+
+        ~CellMatrix() {
+            #ifdef USE_ARRAY
+            delete _arrayGrid;
+            #endif
         }
 
         void fillWithRandom(int min= 0, int max = 1);
 
         void fillFromVector(const std::vector<bool>& list);
+
+        int getLocation(const int row, const int column, const int offset) const;
+
+        int getWord(const int row, const int column, const int offset) const;
+
+        int getWord(const int location) const;
+
+        int getBit(const int row, const int column, const int offset) const;
+
+        int getBit(const int location) const;
 
         bool isSquare() const {
             return _rows == _columns;
@@ -55,7 +90,6 @@ namespace util {
         }
 
         void set(int row, int column, bool val, int offset);
-
 
         bool get(const int row, const int column) const {
             return get(row, column, _offset);
@@ -87,6 +121,7 @@ namespace util {
 
     private:
         std::vector<uint64_t> _grid;
+        uint64_t* _arrayGrid;
         int _rows, _columns;
         int _maxOffset = 1, _offset = 0;;
         uint8_t offset = 0;

@@ -34,6 +34,28 @@ namespace util {
         }
     }
 
+    int CellMatrix::getLocation(const int row, const int column, const int offset) const {
+        return ((row * _columns + column) * (_maxOffset + 1)) + offset;
+    }
+
+    int CellMatrix::getWord(const int row, const int column, const int offset) const {
+        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
+        return location / 64;
+    }
+
+    int CellMatrix::getWord(const int location) const {
+        return location / 64;
+    }
+
+    int CellMatrix::getBit(const int row, const int column, const int offset) const {
+        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
+        return location % 64;
+    }
+
+    int CellMatrix::getBit(const int location) const {
+        return location % 64;
+    }
+
     void CellMatrix::set(const int row, const int column, const bool val, const int offset) {
         if (offset > _maxOffset || offset < 0) {
             cout << "getRecieved invalid offset: " << offset << endl;
@@ -49,23 +71,43 @@ namespace util {
         cout << "inside main set row: " << row << " column: " << column << " val: " << val << " offset: " << offset << endl;
         #endif
 
-        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
-        int index = location / 64;
-        int bit = location % 64;
+        int location = getLocation(row, column, offset);
+        int index = getWord(location);
+        int bit = getBit(location);
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
         cout << "data in main set location: " << location << " index: " << index << " bit: " << bit << endl;
         #endif
 
         if (val) {
+            #ifdef USE_VECTOR
             _grid.at(index) |= (static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY
+            _arrayGrid[index] |= (static_cast<uint64_t>(1) << bit);
+            #endif
 
             #ifdef CELL_MATRIX_DEBUG_LOGGING
+
+            #ifdef USE_VECTOR
             cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            #endif
+
+            #ifndef USE_ARRAY
+            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            #endif
+
             #endif
         }
         else {
+            #ifdef USE_VECTOR
             _grid.at(index) &= ~(static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY
+            _arrayGrid[index] &= ~(static_cast<uint64_t>(1) << bit);
+            #endif
         }
     }
 
@@ -87,9 +129,9 @@ namespace util {
         cout << "in main get() row: " << row << " column: " << column << " offset: " << offset << endl;
         #endif
 
-        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
-        int index = location / 64;
-        int bit = location % 64;
+        int location = getLocation(row, column, offset);
+        int index = getWord(location);
+        int bit = getBit(location);
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
         cout << "data in main get - location: " << location << " index: " << index << " bit: " << bit << endl;
@@ -97,12 +139,32 @@ namespace util {
 
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
-        cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
-        cout << "raw byte after processing: " << std::bitset<64>((_grid.at(index) & (static_cast<uint64_t>(1) << bit))) << endl;
-        cout << "value after processing: " << (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) << endl;
+            
+            #ifdef USE_VECTOR
+            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            cout << "raw byte after processing: " << std::bitset<64>((_grid.at(index) & (static_cast<uint64_t>(1) << bit))) << endl;
+            cout << "value after processing: " << (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) << endl;
+            #endif
+
+            #ifndef USE_ARRAY
+            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
+            cout << "raw byte after processing: " << std::bitset<64>((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit))) << endl;
+            cout << "value after processing: " << ((_arrayGrid[index]) & (static_cast<uint64_t>(1) << bit)) << endl;
+            #endif
+
         #endif
 
-        return (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
+        bool val;
+
+        #ifdef USE_VECTOR
+        val = _grid.at(index) & (static_cast<uint64_t>(1) << bit) >= 1;
+        #endif
+
+        #ifndef USE_ARRAY
+        val = _arrayGrid[index] & (static_cast<uint64_t>(1) << bit) >= 1;
+        #endif
+
+        return val;
     }
 
     int CellMatrix::getSum() const {
