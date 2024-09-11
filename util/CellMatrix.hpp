@@ -14,7 +14,10 @@
 #include <memory>
 #include <bitset>
 
-#define USE_ARRAY
+//#define CELL_MATRIX_DEBUG_LOGGING
+
+//#define USE_ARRAY
+#define USE_ARRAY_2D
 // #define USE_VECTOR
 
 namespace util {
@@ -25,38 +28,40 @@ namespace util {
             : _rows(rows),
               _columns(columns),
               _maxOffset(maxOffset),
-              _offset(0)
+              _offset(0),
+              _arrayGrid(nullptr)
         {
             #ifdef USE_VECTOR
-            _grid.resize(((rows * columns + 63) * _maxOffset) / 64);
+            _grid.resize(((rows * columns + 63) * (_maxOffset + 1)) / 64);
             #endif
 
             #ifdef USE_ARRAY
-            int arraySize = ((rows * columns + 63) * _maxOffset) / 64);
+            int arraySize = (((rows * columns + 63) * (_maxOffset + 1)) / 64);
             _arrayGrid = new uint64_t[arraySize]();
+            #endif
+
+            #ifdef USE_ARRAY_2D
+            int arraySize = (rows * columns) * (_maxOffset + 1);
+            _2DGrid = new uint8_t*[rows * (_maxOffset + 1)]();
+            for (int i = 0; i < rows; i++) {
+                _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
+            }
             #endif
         }
 
         explicit CellMatrix(const int size, const int maxOffset = 1)
-            : _rows(size),
-              _columns(size),
-              _maxOffset(maxOffset),
-              _offset(0)
-
-        {
-            #ifdef USE_VECTOR
-            _grid.resize(((size * size + 63) * (_maxOffset + 1)) / 64);
-            #endif
-
-            #ifdef USE_ARRAY
-            int arraySize = ((size * size + 63) * (_maxOffset * 1)) / 64;
-            _arrayGrid = new uint64_t[arraySize]();
-            #endif
-        }
+            : CellMatrix(size, size, maxOffset)
+        {}
 
         ~CellMatrix() {
             #ifdef USE_ARRAY
-            delete _arrayGrid;
+            delete[] _arrayGrid;
+            _arrayGrid = nullptr;
+            #endif
+
+            #ifdef USE_ARRAY_2D
+            delete[] _2DGrid;
+            _2DGrid = nullptr;
             #endif
         }
 
@@ -123,9 +128,9 @@ namespace util {
     private:
         std::vector<uint64_t> _grid;
         uint64_t* _arrayGrid;
+        uint8_t** _2DGrid;
         int _rows, _columns;
-        int _maxOffset = 1, _offset = 0;;
-        uint8_t offset = 0;
+        int _maxOffset = 1, _offset = 0;
     };
 }
 
