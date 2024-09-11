@@ -99,39 +99,41 @@ inline bool getCellUpdate(bool currentState, int neighborsAlive) {
 
 
 inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
-    int neighborsAlive = -grid.get(row, column);
+//    int neighborsAlive = -grid.get(row, column);
+    int neighborsAlive = 0;
 
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
     cout << "[" << endl;
-#endif
+    #endif
 
     for (int i = -1; i <= 1; i++) {
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
         cout << "[";
-#endif
+    #endif
 
         for (int j = -1; j <=1; j++) {
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
             cout << " " << grid.get(row + i, column + j);
-#endif
-
-            neighborsAlive += grid.get(row + i, column + j);
+    #endif
+            if (i != 0 || j != 0) {
+                neighborsAlive += grid.get(row + i, column + j);
+            }
         }
 
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
         cout << "]" << endl;
-#endif
+    #endif
 
         if (neighborsAlive >= 4) {
             break;
         }
     }
 
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
     cout << "]" << endl;
 
     cout << "val: " << neighborsAlive << endl;
-#endif
+    #endif
 
     switch (neighborsAlive) {
         case (-1):
@@ -167,7 +169,106 @@ inline void updateCells(util::CellMatrix &matrix) {
 //TODO: Make a system that reserves acess to a certain set of indices then only apply mutexes to the overlapping ones
 //      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
-// TODO: update this to do a block of updates per thread instead of a row and make it smart by using data read in previous updates
+void updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadPool &threadPool, int numGroups = -1) {
+    // cout << "Update Started" << endl;
+
+    if (numGroups == -1) {
+        numGroups = static_cast<int>(threadPool.getNumThreads());
+    } else if (numGroups == -2) {
+        numGroups = matrix.rows();
+    } else if (numGroups < 0) {
+        numGroups = static_cast<int>(threadPool.getNumThreads());
+    }
+
+    if (numGroups > matrix.rows()) {
+        numGroups = matrix.rows();
+    }
+
+    const int nextOffset = matrix.getNextOffset();
+
+    int groupSize = matrix.rows()/numGroups;
+    int overhang = matrix.rows()%numGroups;
+    int previousOverhang = 0;
+    int allocatedOverhang = 0;
+
+    std::vector<std::pair<int, int>> rowGroups(numGroups);
+
+    for (int i = 0; i < numGroups; i++) {
+        rowGroups.at(i) = std::make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
+
+        if (i < overhang) {
+            rowGroups.at(i).second += 1;
+            previousOverhang = 1;
+            allocatedOverhang++;
+        } else {
+            previousOverhang = 0;
+        }
+    }
+
+    // TODO: need to expand cellgroups by 1 on all sides with new neighbor placement method
+
+    // cout << "[";
+    // for (int i = 0; i < rowGroups.size(); i++) {
+    //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    // }
+    // cout << "]" << endl;
+
+    std::shared_mutex m;
+
+    for (auto & rowGroup : rowGroups) {
+        // for (int row = 0; row < matrix.rows(); row++) {
+        threadPool.enqueue([nextOffset
+                                   // , row
+                                   , &rowGroup
+                                   , &matrix, &m] {
+            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+
+            for (int row = rowGroup.first; row < rowGroup.second; row++) {
+                for (int col = 0; col < matrix.columns(); col++) {
+
+                    bool val = matrix.get(row, col);
+
+
+                    // shared_lock read_lock(m);
+                    for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                        for (int colOffset = -1; colOffset <= 1; colOffset++) {
+                            if (colOffset == 0 && rowOffset == 0) {
+                                continue;
+                            }
+                            else {
+                                matrix.set(row + rowOffset, col + colOffset, -1);
+                            }
+                        }
+                    }
+
+                    matrix.set(row, col, matrix.getNextOffset());
+                    // read_lock.unlock();
+
+                    // unique_lock write_lock(m);
+//                    matrix.set(row, col, update, nextOffset);
+                    // write_lock.unlock();
+
+                    // cout << "i: " << i << ", j: " << j << endl;
+                }
+            }
+        });
+    }
+
+    // cout << "ThreadPool started" << endl;
+
+    // threadPool.enqueue([] {
+    //     this_thread::sleep_for(chrono::seconds(10));
+    //     cout << "Thread ID: " << this_thread::get_id() << endl;
+    // });
+
+    threadPool.waitTillEmpty();
+
+    // cout << "ThreadPool stopped" << endl;
+
+    matrix.incrementOffset();
+}
+
+
 void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &threadPool, int numGroups = -1) {
     // cout << "Update Started" << endl;
 

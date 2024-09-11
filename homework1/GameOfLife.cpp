@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     int rows = 1000;
     int columns = rows;
 
-    int iterations = 1000;
+    int iterations = 5000;
 
     constexpr int maxOffset = 1;
 
@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
     cout << "fill with random complete" << endl;
     #endif
 
-    // vector<bool> initializer = {
-    //     true, true, false,
-    //     true, true, false,
-    //     false, false, false
-    // };
+     vector<bool> initializer = {
+         true, true, false,
+         true, true, false,
+         false, false, false
+     };
 
     // matrix.setFromVector(initializer);
 

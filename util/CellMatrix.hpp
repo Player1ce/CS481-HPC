@@ -29,6 +29,7 @@ namespace util {
               _columns(columns),
               _maxOffset(maxOffset),
               _offset(0),
+              _nextOffset(calculateNextOffset()),
               _arrayGrid(nullptr)
         {
             #ifdef USE_VECTOR
@@ -41,8 +42,7 @@ namespace util {
             #endif
 
             #ifdef USE_ARRAY_2D
-            int arraySize = (rows * columns) * (_maxOffset + 1);
-            _2DGrid = new uint8_t*[rows * (_maxOffset + 1)]();
+            _2DGrid = new uint8_t*[rows]();
             for (int i = 0; i < rows; i++) {
                 _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
             }
@@ -108,11 +108,12 @@ namespace util {
         }
 
         [[nodiscard]] inline int getNextOffset() const {
-            return (_offset + 1) % (_maxOffset + 1);
+            return _nextOffset;
         }
 
         int incrementOffset() { // NOLINT(*-use-nodiscard)
             _offset = getNextOffset();
+            _nextOffset = calculateNextOffset();
             return _offset;
         }
 
@@ -126,11 +127,16 @@ namespace util {
         }
 
     private:
+
+        [[nodiscard]] inline int calculateNextOffset() const {
+            return (_offset + 1) % (_maxOffset + 1);
+        }
+
         std::vector<uint64_t> _grid;
         uint64_t* _arrayGrid;
         uint8_t** _2DGrid;
         int _rows, _columns;
-        int _maxOffset = 1, _offset = 0;
+        int _maxOffset = 1, _offset = 0, _nextOffset = 1;
     };
 }
 

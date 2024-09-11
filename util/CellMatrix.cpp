@@ -91,7 +91,7 @@ namespace util {
             #endif
 
             #ifdef USE_ARRAY_2D
-            _2DGrid[row][column] = 1;
+            _2DGrid[row][(_columns * offset) + column] = 1;
             #endif
 
             #ifdef CELL_MATRIX_DEBUG_LOGGING
@@ -116,7 +116,7 @@ namespace util {
             #endif
 
             #ifdef USE_ARRAY_2D
-            _2DGrid[row][column] = 0;
+            _2DGrid[row][(_columns * offset) + column] = 0;
             #endif
         }
     }
@@ -165,7 +165,7 @@ namespace util {
             #endif
 
             #ifdef USE_ARRAY_2D
-            cout << "raw byte: " << std::bitset<64>(_2DGrid[row][column]) << endl;
+            cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
             #endif
 
         #endif
@@ -181,7 +181,7 @@ namespace util {
         #endif
 
         #ifdef USE_ARRAY_2D
-        val = _2DGrid[row][column] == 1;
+        val = _2DGrid[row][(_columns * offset) + column] == 1;
         #endif
 
         return val;
