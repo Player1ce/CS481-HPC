@@ -7,23 +7,100 @@
 
 #include "../util/CellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
-#include "../util/ThreadPool2.hpp"
 
 using namespace std;
 using namespace util;
 
 #define DEBUG_LOGGING
-// #define CELL_MATRIX_DEBUG_LOGGING
+#define CELL_MATRIX_DEBUG_LOGGING
 // #define CELL_UPDATE_DEBUG_LOGGING
 
 
 //TODO: integrate a method into the CellMatrix that uses a single mutex to lock all writes to a certain offset of the matrix
 //  This will allow the update method to read the entire offset without acquiring any new locks even across multiple threads
 
+//TODO: solution to mutex problem. Treat all bits on the edge of a range as shared and use atomic_ref to access and edit them.
+//      Should be faster than a mutex and equivalently safe. Do calculations to figure out what range is in danger
+inline bool updateCellsRowOptimized(CellMatrix matrix,
+ int rowStart, int rowEnd, int colStart, int colEnd) {
+    std::vector<int> currentCol;
+    std::vector<int> nextCol;
+    std::vector<int> futureCol;
+
+    currentCol.resize(rowEnd - rowStart);
+    nextCol.resize(rowEnd - rowStart);
+    futureCol.resize(rowEnd - rowStart);
+
+    // initialize
+    for (int col = colStart; col < colEnd; col++) {
+        currentCol.at(0) += matrix.get(rowStart - 1, colStart - 1);
+    }
+    currentCol.at(0) += matrix.get(rowStart - 1, colStart - 1);
+
+    for (int colOffset = 0; colOffset <= 1; colOffset++) {
+        currentCol.at(0) += matrix.get(rowStart - 1, colStart + colOffset);
+        currentCol.at(1) += matrix.get(rowStart - 1, colStart + colOffset);
+    }
+    
+
+
+    // for (int row = rowStart; row < rowEnd; row++) {
+    //     for(int col = colStart; col < colEnd; col++) {
+    //         switch()
+    //     }
+    // }
 
 
 
-bool getCellUpdate(CellMatrix &grid, int row, int column) {
+    for (int j = -1; j <= 1; j++) {
+        for (int i = -1; i <= 1; i++) {
+            currentCol.at(0) += matrix.get(rowStart - 1, colStart);
+            nextCol.at(0) += matrix.get(rowStart - 1, colStart);
+        }
+    }
+
+
+    for (int row = rowStart; row < rowEnd; row++) {
+        for (int colOffset = -1; colOffset <=1; colOffset++) {
+            #ifdef CELL_UPDATE_DEBUG_LOGGING
+            // cout << " " << grid.get(row + rowOffset, column + colOffset);
+            #endif
+            // neighborsAlive += grid.get(rowStart + rowOffset, colStart + colOffset); 
+        }
+    }
+    return 0;
+
+}
+
+
+inline bool getCellUpdate(bool currentState, int neighborsAlive) {
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    cout << "val: " << neighborsAlive << endl;
+    #endif
+
+    switch (neighborsAlive) {
+            case (-1):
+            case (0):
+            case (1):
+                return false;
+            break;
+
+            case(2):
+                return currentState;
+            break;
+
+            case(3):
+                return true;
+            break;
+
+            default:
+                return false;
+            break;
+    }
+}
+
+
+inline bool getCellUpdate(CellMatrix &grid, int row, int column) {
     int neighborsAlive = -grid.get(row, column);
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
@@ -79,7 +156,7 @@ bool getCellUpdate(CellMatrix &grid, int row, int column) {
     }
 }
 
-void updateCells(CellMatrix &matrix) {
+inline void updateCells(CellMatrix &matrix) {
     const int nextOffset = matrix.getNextOffset();
     for (int i = 0; i < matrix.rows(); i++) {
         for (int j = 0; j < matrix.columns(); j++) {
@@ -88,6 +165,9 @@ void updateCells(CellMatrix &matrix) {
     }
     matrix.incrementOffset();
 }
+
+//TODO: Make a system that reserves acess to a certain set of indices then only apply mutexes to the overlapping ones
+//      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
 // TODO: update this to do a block of updates per thread instead of a row and make it smart by using data read in previous updates
 void updateCellsUsingThreadPool(CellMatrix &matrix, ThreadPool &threadPool, int numGroups = -1) {
@@ -139,9 +219,12 @@ void updateCellsUsingThreadPool(CellMatrix &matrix, ThreadPool &threadPool, int 
         threadPool.enqueue([nextOffset
             // , row
             , &rowGroup
-            , &matrix, &m, &rowGroups] {
+            , &matrix, &m] {
+            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+
             for (int row = rowGroup.first; row < rowGroup.second; row++) {
                 for (int col = 0; col < matrix.columns(); col++) {
+
                         // TODO: need to implement this lock in the CellMatrix at one point for efficiency
                         // shared_lock read_lock(m);
                         const bool update = getCellUpdate(matrix, row, col);
@@ -174,20 +257,39 @@ void updateCellsUsingThreadPool(CellMatrix &matrix, ThreadPool &threadPool, int 
 int main(int argc, char** argv) {
     cout << "Hello World!" << endl;
 
-    constexpr int size = 10000;
+    int rows = 1000;
+    int columns = rows;
 
-    constexpr int iterations = 1000;
+    int iterations = 100;
 
-    constexpr int printCount = max(iterations / 10, 1);
+    constexpr int maxOffset = 1;
 
-    constexpr int printThreshold = 101;
+    constexpr int printThreshold = 50;
 
-    constexpr int numThreads = 8;
+    constexpr int numThreads = 1;
+
+    if (argc < 3) {
+        cout << "Using coded constants" << endl;
+    }
+    else if (argc == 3) {
+        cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << endl;
+        rows = atoi(argv[0]);
+        columns = rows;
+        iterations = atoi(argv[1]);
+    }
+    else if (argc == 4) {
+        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << endl;
+        rows = atoi(argv[0]);
+        columns = atoi(argv[1]);
+        iterations = atoi(argv[2]);
+    }
+
+    int printCount = max(iterations / 10, 1);
+
 
     chrono::time_point<chrono::system_clock> start, end;
 
-
-    CellMatrix matrix = CellMatrix(size);
+    CellMatrix matrix = CellMatrix(rows, columns, maxOffset);
 
     #ifdef DEBUG_LOGGING
     cout << "constructor complete" << endl;
@@ -198,6 +300,7 @@ int main(int argc, char** argv) {
     #ifdef DEBUG_LOGGING
     cout << "fill with random complete" << endl;
     #endif
+
     // vector<bool> initializer = {
     //     true, true, false,
     //     true, true, false,
@@ -213,19 +316,19 @@ int main(int argc, char** argv) {
     cout << "sum complete" << endl;
     #endif
 
-    if constexpr (size < printThreshold) {
+    if (rows*columns < printThreshold * printThreshold) {
         cout << matrix << endl;
     }
 
-    ThreadPool threadPool(numThreads);
+    // ThreadPool threadPool(numThreads);
 
     start = chrono::system_clock::now();
 
     for (int i = 0; i < iterations; i++) {
 
-        // updateCells(matrix);
+        updateCells(matrix);
 
-        updateCellsUsingThreadPool(matrix, threadPool, numThreads);
+        // updateCellsUsingThreadPool(matrix, threadPool, numThreads);
 
 
         if (i % printCount == 0) {
@@ -237,12 +340,12 @@ int main(int argc, char** argv) {
 
     cout << "System took: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " seconds to run" << endl;
 
-    if constexpr (size < printThreshold) {
+    if (rows*columns < printThreshold*printThreshold) {
         cout << "end matrix " << endl;
         cout << matrix << endl;
     }
 
-    const double percent = (sum / static_cast<double>(size*size)) * 100.0;
+    const double percent = (sum / static_cast<double>(rows*columns)) * 100.0;
     cout << "percent: " << percent << endl;
 
     return 0;
