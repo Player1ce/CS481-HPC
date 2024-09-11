@@ -94,8 +94,8 @@ namespace util {
             cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
             #endif
 
-            #ifndef USE_ARRAY
-            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            #ifdef USE_ARRAY
+            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
             #endif
 
             #endif

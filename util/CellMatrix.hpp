@@ -12,6 +12,7 @@
 #include <sstream>
 #include <mutex>
 #include <memory>
+#include <bitset>
 
 #define USE_ARRAY
 // #define USE_VECTOR
@@ -27,11 +28,11 @@ namespace util {
               _offset(0)
         {
             #ifdef USE_VECTOR
-            _grid.resize(((rows * columns + 63) * (_maxOffset * 1)) / 64);
+            _grid.resize(((rows * columns + 63) * _maxOffset) / 64);
             #endif
 
             #ifdef USE_ARRAY
-            int arraySize = ((rows * columns + 63) * (_maxOffset * 1)) / 64;
+            int arraySize = ((rows * columns + 63) * _maxOffset) / 64);
             _arrayGrid = new uint64_t[arraySize]();
             #endif
         }
@@ -63,25 +64,25 @@ namespace util {
 
         void fillFromVector(const std::vector<bool>& list);
 
-        int getLocation(const int row, const int column, const int offset) const;
+        [[nodiscard]] inline int getLocation(int row, int column, int offset) const;
 
-        int getWord(const int row, const int column, const int offset) const;
+        [[nodiscard]] inline int getWord(int row, int column, int offset) const;
 
-        int getWord(const int location) const;
+        [[nodiscard]] inline int getWord(int location) const;
 
-        int getBit(const int row, const int column, const int offset) const;
+        [[nodiscard]] inline int getBit(int row, int column, int offset) const;
 
-        int getBit(const int location) const;
+        [[nodiscard]] inline int getBit(int location) const;
 
-        bool isSquare() const {
+        [[nodiscard]] inline bool isSquare() const {
             return _rows == _columns;
         }
 
-        int rows() const {
+        [[nodiscard]] int rows() const {
             return _rows;
         }
 
-        int columns() const {
+        [[nodiscard]] int columns() const {
             return _columns;
         }
 
@@ -91,28 +92,28 @@ namespace util {
 
         void set(int row, int column, bool val, int offset);
 
-        bool get(const int row, const int column) const {
+        [[nodiscard]] bool get(const int row, const int column) const {
             return get(row, column, _offset);
         }
 
-        bool get(int row, int column, int offset) const;
+        [[nodiscard]] bool get(int row, int column, int offset) const;
 
-        int getOffset() const {
+        [[nodiscard]] int getOffset() const {
             return _offset;
         }
 
-        int getNextOffset() const {
+        [[nodiscard]] inline int getNextOffset() const {
             return (_offset + 1) % (_maxOffset + 1);
         }
 
-        int incrementOffset() {
-            _offset = (_offset + 1) % (_maxOffset + 1);
+        int incrementOffset() { // NOLINT(*-use-nodiscard)
+            _offset = getNextOffset();
             return _offset;
         }
 
-        int getSum() const;
+        [[nodiscard]] int getSum() const;
 
-        std::string toString() const;
+        [[nodiscard]] std::string toString() const;
 
         friend std::ostream& operator<<(std::ostream& os, const CellMatrix& obj) {
             os << obj.toString();
