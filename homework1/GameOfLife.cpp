@@ -8,6 +8,8 @@
 #include "../util/CellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
 
+#include "UpdateMethods.hpp"
+
 using namespace std;
 using namespace util;
 
