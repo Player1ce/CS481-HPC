@@ -1,3 +1,12 @@
+/*
+Name: Marcelo Torres
+Email: mtorres3@crimson.ua.edu
+Course Section: CS 481
+Homework #: 1
+Instructions to compile the program: (for example: gcc -Wall -O -o hw1 hw1.c)
+Instructions to run the program: (for example: ./hw1 <size> <iterations>)
+*/
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -19,9 +28,8 @@ using namespace util;
 
 
 int main(int argc, char** argv) {
-    cout << "Hello World!" << endl;
 
-    int rows = 1000;
+    int rows = 5000;
     int columns = rows;
 
     int iterations = 5000;
@@ -30,22 +38,22 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
-    constexpr int numThreads = 8;
+    constexpr int numThreads = 10;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
     }
     else if (argc == 3) {
         cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << endl;
-        rows = atoi(argv[0]);
+        rows = atoi(argv[1]);
         columns = rows;
-        iterations = atoi(argv[1]);
+        iterations = atoi(argv[2]);
     }
     else if (argc == 4) {
         cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << endl;
-        rows = atoi(argv[0]);
-        columns = atoi(argv[1]);
-        iterations = atoi(argv[2]);
+        rows = atoi(argv[1]);
+        columns = atoi(argv[2]);
+        iterations = atoi(argv[3]);
     }
 
     int printCount = max(iterations / 10, 1);
@@ -85,16 +93,26 @@ int main(int argc, char** argv) {
 
      ThreadPool threadPool(numThreads);
 
+    int multiplier = 1;
+
     start = chrono::system_clock::now();
+
+    auto groups = calculateRowGroups(matrix, numThreads);
 
     for (int i = 0; i < iterations; i++) {
 
 //        updateCells(matrix);
 
-         updateCellsUsingThreadPool(matrix, threadPool, numThreads);
+        bool updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
 
-        if (i % printCount == 0) {
+        if (i == printCount * multiplier) {
             cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
+              multiplier++;
+        }
+
+        if (!updateOccurred) {
+            cout << "exiting early because no update" << endl;
+            break;
         }
     }
 

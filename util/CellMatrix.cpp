@@ -56,7 +56,7 @@ namespace util {
         return location % 64;
     }
 
-    void CellMatrix::set(const int row, const int column, const bool val, const int offset) {
+    bool CellMatrix::set(const int row, const int column, const bool val, const int offset) {
         if (offset > _maxOffset || offset < 0) {
             cout << "getReceived invalid offset: " << offset << endl;
         }
@@ -64,7 +64,7 @@ namespace util {
         // create an infinite border of zeroes around the grid.
         if (row < 0 || row > _columns || column < 0 || column > _rows) {
             cout << "Error: Attempting to set out of range element will do nothing." << endl;
-            return;
+            return false;
         }
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
@@ -83,15 +83,21 @@ namespace util {
 
         if (val) {
             #ifdef USE_VECTOR
+            bool oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
             _grid.at(index) |= (static_cast<uint64_t>(1) << bit);
+            return oldVal != val;
             #endif
 
             #ifdef USE_ARRAY
+            bool oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
             _arrayGrid[index] |= (static_cast<uint64_t>(1) << bit);
+            return oldVal != val;
             #endif
 
             #ifdef USE_ARRAY_2D
+            bool oldVal = _2DGrid[row][(_columns * offset) + column];
             _2DGrid[row][(_columns * offset) + column] = 1;
+            return oldVal != val;
             #endif
 
             #ifdef CELL_MATRIX_DEBUG_LOGGING
@@ -108,15 +114,21 @@ namespace util {
         }
         else {
             #ifdef USE_VECTOR
+            bool oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
             _grid.at(index) &= ~(static_cast<uint64_t>(1) << bit);
+            return val != oldVal;
             #endif
 
             #ifdef USE_ARRAY
+            bool oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
             _arrayGrid[index] &= ~(static_cast<uint64_t>(1) << bit);
+            return val != oldVal;
             #endif
 
             #ifdef USE_ARRAY_2D
+            bool oldVal = _2DGrid[row][(_columns * offset) + column];
             _2DGrid[row][(_columns * offset) + column] = 0;
+            return oldVal != val;
             #endif
         }
     }

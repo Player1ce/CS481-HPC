@@ -29,8 +29,7 @@ namespace util {
               _columns(columns),
               _maxOffset(maxOffset),
               _offset(0),
-              _nextOffset(calculateNextOffset()),
-              _arrayGrid(nullptr)
+              _nextOffset(calculateNextOffset())
         {
             #ifdef USE_VECTOR
             _grid.resize(((rows * columns + 63) * (_maxOffset + 1)) / 64);
@@ -91,11 +90,11 @@ namespace util {
             return _columns;
         }
 
-        void set(const int row, const int column, const bool val) {
-            set(row, column, val, _offset);
+        bool set(const int row, const int column, const bool val) {
+            return set(row, column, val, _offset);
         }
 
-        void set(int row, int column, bool val, int offset);
+        bool set(int row, int column, bool val, int offset);
 
         [[nodiscard]] bool get(const int row, const int column) const {
             return get(row, column, _offset);
@@ -132,9 +131,18 @@ namespace util {
             return (_offset + 1) % (_maxOffset + 1);
         }
 
+        #ifdef USE_VECTOR
         std::vector<uint64_t> _grid;
+        #endif
+
+        #ifdef USE_ARRAY
         uint64_t* _arrayGrid;
+        #endif
+
+        #ifdef USE_ARRAY_2D
         uint8_t** _2DGrid;
+        #endif
+
         int _rows, _columns;
         int _maxOffset = 1, _offset = 0, _nextOffset = 1;
     };

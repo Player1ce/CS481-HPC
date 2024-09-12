@@ -11,6 +11,7 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include <atomic>
 #include <iostream>
 
 
@@ -156,7 +157,7 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
     }
 }
 
-inline void updateCells(util::CellMatrix &matrix) {
+inline bool updateCells(util::CellMatrix &matrix) {
     const int nextOffset = matrix.getNextOffset();
     for (int i = 0; i < matrix.rows(); i++) {
         for (int j = 0; j < matrix.columns(); j++) {
@@ -268,23 +269,15 @@ void updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadP
     matrix.incrementOffset();
 }
 
+std::vector<std::pair<int, int>> calculateRowGroups(util::CellMatrix &matrix, int numGroups) {
 
-void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &threadPool, int numGroups = -1) {
-    // cout << "Update Started" << endl;
-
-    if (numGroups == -1) {
-        numGroups = static_cast<int>(threadPool.getNumThreads());
-    } else if (numGroups == -2) {
-        numGroups = matrix.rows();
-    } else if (numGroups < 0) {
-        numGroups = static_cast<int>(threadPool.getNumThreads());
+    if (numGroups < 0) {
+        numGroups = 1;
     }
 
     if (numGroups > matrix.rows()) {
         numGroups = matrix.rows();
     }
-
-    const int nextOffset = matrix.getNextOffset();
 
     int groupSize = matrix.rows()/numGroups;
     int overhang = matrix.rows()%numGroups;
@@ -305,11 +298,22 @@ void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
         }
     }
 
+    return rowGroups;
+}
+
+
+bool updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
+    // cout << "Update Started" << endl;
+
     // cout << "[";
     // for (int i = 0; i < rowGroups.size(); i++) {
     //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
     // }
     // cout << "]" << endl;
+
+    std::atomic<bool> updateOccurred = false;
+
+    const int nextOffset = matrix.getNextOffset();
 
     std::shared_mutex m;
 
@@ -318,8 +322,10 @@ void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
         threadPool.enqueue([nextOffset
                                    // , row
                                    , &rowGroup
-                                   , &matrix, &m] {
-            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+                                   , &matrix, &m
+                                   , &updateOccurred] {
+//            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+            bool updateStored = false;
 
             for (int row = rowGroup.first; row < rowGroup.second; row++) {
                 for (int col = 0; col < matrix.columns(); col++) {
@@ -330,7 +336,10 @@ void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
                     // read_lock.unlock();
 
                     // unique_lock write_lock(m);
-                    matrix.set(row, col, update, nextOffset);
+                    if (matrix.set(row, col, update, nextOffset) && !updateStored) {
+                        updateOccurred = true;
+                        updateStored = true;
+                    }
                     // write_lock.unlock();
 
                     // cout << "i: " << i << ", j: " << j << endl;
@@ -351,6 +360,7 @@ void updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
     // cout << "ThreadPool stopped" << endl;
 
     matrix.incrementOffset();
+    return updateOccurred;
 }
 
 
