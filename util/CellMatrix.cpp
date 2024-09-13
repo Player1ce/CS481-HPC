@@ -136,6 +136,101 @@ namespace util {
         }
     }
 
+    bool CellMatrix::integratedSet(const int row, const int column, std::function<bool(bool)> evaluator, const int previousOffset, const int offset) {
+        if (offset > _maxOffset || offset < 0) {
+            cout << "getReceived invalid offset: " << offset << endl;
+        }
+
+        // create an infinite border of zeroes around the grid.
+        if (row < 0 || row > _columns || column < 0 || column > _rows) {
+            #ifdef CELL_MATRIX_DEBUG_LOGGING
+            cout << "Error: Attempting to set out of range element will do nothing." << endl;
+            #endif
+
+            return false;
+        }
+
+        #if defined(USE_ARRAY) || defined(USE_VECTOR)
+        int location = getLocation(row, column, offset);
+        int index = getWord(location);
+        int bit = getBit(location);
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+        cout << "data in main set location: " << location << " index: " << index << " bit: " << bit << endl;
+        #endif
+
+        #endif
+
+
+        bool val, oldVal;
+
+        // TODO: Update oldVal to use previous offset in all cases
+        #ifdef USE_VECTOR
+        oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
+        #endif
+
+        #ifdef USE_ARRAY
+        oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
+        #endif
+
+        #ifdef USE_ARRAY_2D
+        oldVal = _2DGrid[row][(_columns * previousOffset) + column];
+//        oldVal = _2DGrid[row][(column * (previousOffset+ 1)) + previousOffset]; // TODO: fix if changes go through
+        #endif
+
+        val = evaluator(oldVal);
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+        cout << "inside integrated set row: " << row << " column: " << column << " val: " << val << " offset: " << offset << endl;
+        #endif
+
+        if (val) {
+            #ifdef USE_VECTOR
+            _grid.at(index) |= (static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY
+            _arrayGrid[index] |= (static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY_2D
+            _2DGrid[row][(_columns * offset) + column] = 1;
+//            _2DGrid[row][(column * (offset+ 1)) + offset] = 1;
+            #endif
+        }
+        else {
+            #ifdef USE_VECTOR
+            _grid.at(index) &= ~(static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY
+            _arrayGrid[index] &= ~(static_cast<uint64_t>(1) << bit);
+            #endif
+
+            #ifdef USE_ARRAY_2D
+                _2DGrid[row][(_columns * offset) + column] = 0;
+//                _2DGrid[row][(column * (offset+ 1)) + offset] = 0;
+            #endif
+        }
+
+
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+
+            #ifdef USE_VECTOR
+            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            #endif
+
+            #ifdef USE_ARRAY
+            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
+            #endif
+
+        #endif
+
+        return oldVal != val;
+
+    }
+
     bool CellMatrix::get(const int row, const int column, const int offset) const {
         if (offset > _maxOffset || offset < 0) {
             cout << "getReceived invalid offset: " << offset << endl;

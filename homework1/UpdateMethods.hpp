@@ -233,23 +233,18 @@ bool updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadP
                                    , &rowGroup
                                    , &matrix
                                    , &updateOccurred] {
-//            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
-
             bool updateStored = false;
             FixedSizeQueue<int, 3> windowTracker;
-            int sum = 0;
 
-
-            auto evaluator = [&windowTracker](const bool cellAlive) {
-                return getCellUpdateSubtractingState(windowTracker.sum(), cellAlive);
-            };
+//            auto evaluator = [&windowTracker](const bool cellAlive) {
+//                return getCellUpdateSubtractingState(windowTracker.sum(), cellAlive);
+//            };
 
             for (int row = rowGroup.first; row < rowGroup.second; row++) {
                 windowTracker.push(0);
                 for (int col = 0; col < matrix.columns() + 1; col++) {
 
-                    int window = matrix.getVerticalWindow(row, col);
-                    windowTracker.push(window);
+                    windowTracker.push(matrix.getVerticalWindow(row, col));
 
 //                    std::cout << "sum: " << windowTracker.sum() << " | ";
 //                    std::cout << std::endl;
@@ -262,7 +257,6 @@ bool updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadP
 
 //                    #ifdef CELL_UPDATE_DEBUG_LOGGING
 //                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
-
 //                    #endif
 
                     if (matrix.set(row, col-1, updateMethod1, nextOffset) && !updateStored) {

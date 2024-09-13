@@ -98,6 +98,12 @@ namespace util {
 
         bool set(int row, int column, bool val, int offset);
 
+        bool integratedSet(const int row, const int column, std::function<bool(bool)> evaluator, const int previousOffset) {
+            return integratedSet(row, column, std::move(evaluator), previousOffset, getOffset());
+        }
+
+        bool integratedSet(int row, int column, std::function<bool(bool)> evaluator, int previousOffset, int offset);
+
         [[nodiscard]] bool get(const int row, const int column) const {
             return get(row, column, getOffset());
         }

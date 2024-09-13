@@ -28,10 +28,10 @@ using namespace util;
 
 int main(int argc, char** argv) {
 
-    int rows = 5;
+    int rows = 1000;
     int columns = rows;
 
-    int iterations = 1;
+    int iterations = 5000;
 
     constexpr bool useInitializerList = false;
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
-    constexpr int numThreads = 1;
+    constexpr int numThreads = 10;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
