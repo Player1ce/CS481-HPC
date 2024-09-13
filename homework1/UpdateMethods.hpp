@@ -107,9 +107,9 @@ inline bool getCellUpdateSubtractingState(int neighborsAlive, const bool cellAli
 
     neighborsAlive -= (cellAlive ? 1 : 0);
 
-//    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
     std::cout <<" | val: " << neighborsAlive << " ";
-//    #endif
+    #endif
 
     switch (neighborsAlive) {
         case (-1):
@@ -134,7 +134,6 @@ inline bool getCellUpdateSubtractingState(int neighborsAlive, const bool cellAli
 
 
 inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
-//    int neighborsAlive = -grid.get(row, column);
     int neighborsAlive = 0;
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
@@ -168,9 +167,9 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
     std::cout << "]" << std::endl;
 
     std::cout << "val: " << neighborsAlive << std::endl;
+//    std::cout <<" | val: " << neighborsAlive << " ";
     #endif
 
-    std::cout <<" | val: " << neighborsAlive << " ";
 
 
     switch (neighborsAlive) {
@@ -252,17 +251,17 @@ bool updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadP
                     int window = matrix.getVerticalWindow(row, col);
                     windowTracker.push(window);
 
-                    std::cout << "sum: " << windowTracker.sum() << " | ";
-                    std::cout << std::endl;
+//                    std::cout << "sum: " << windowTracker.sum() << " | ";
+//                    std::cout << std::endl;
 
-                    const bool workingUpdate = getCellUpdate(matrix, row, col);
-                    std::cout << "workingUpdate: " << workingUpdate << " | ";
+//                    const bool workingUpdate = getCellUpdate(matrix, row, col);
+//                    std::cout << "workingUpdate: " << workingUpdate << " | ";
 
                     const bool updateMethod1 = getCellUpdateSubtractingState(windowTracker.sum(), matrix.get(row, col-1));
-                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
+
 
 //                    #ifdef CELL_UPDATE_DEBUG_LOGGING
-//                    std::cout << std::endl;
+//                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
 
 //                    #endif
 

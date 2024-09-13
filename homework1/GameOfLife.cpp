@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
     int iterations = 1;
 
-    constexpr bool useInitializerList = true;
+    constexpr bool useInitializerList = false;
 
     constexpr int maxOffset = 1;
 

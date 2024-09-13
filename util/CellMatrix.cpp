@@ -63,9 +63,9 @@ namespace util {
 
         // create an infinite border of zeroes around the grid.
         if (row < 0 || row > _columns || column < 0 || column > _rows) {
-//            #ifdef CELL_MATRIX_DEBUG_LOGGING
+            #ifdef CELL_MATRIX_DEBUG_LOGGING
             cout << "Error: Attempting to set out of range element will do nothing." << endl;
-//            #endif
+            #endif
 
             return false;
         }
