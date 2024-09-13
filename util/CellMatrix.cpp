@@ -63,7 +63,10 @@ namespace util {
 
         // create an infinite border of zeroes around the grid.
         if (row < 0 || row > _columns || column < 0 || column > _rows) {
+//            #ifdef CELL_MATRIX_DEBUG_LOGGING
             cout << "Error: Attempting to set out of range element will do nothing." << endl;
+//            #endif
+
             return false;
         }
 
@@ -155,10 +158,11 @@ namespace util {
         int location = getLocation(row, column, offset);
         int index = getWord(location);
         int bit = getBit(location);
-        #endif
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
         cout << "data in main get - location: " << location << " index: " << index << " bit: " << bit << endl;
+        #endif
+
         #endif
 
 
@@ -194,6 +198,87 @@ namespace util {
 
         #ifdef USE_ARRAY_2D
         val = _2DGrid[row][(_columns * offset) + column] == 1;
+        #endif
+
+        return val;
+    }
+
+    [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int column, const int offset) const {
+        if (offset > _maxOffset || offset < 0) {
+            cout << "getVerticalWindowReceived invalid offset: " << offset << endl;
+        }
+
+        // create an infinite border of zeroes around the grid.
+        if (row < 0 || row >= _columns || column < 0 || column >= _rows) {
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+            cout << "Debug: Accessing out of range cell returning zero." << endl;
+        #endif
+
+            return false;
+        }
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+        cout << "in main get() row: " << row << " column: " << column << " offset: " << offset << endl;
+        #endif
+
+        #if defined(USE_ARRAY) || defined(USE_VECTOR)
+        int location = getLocation(row, column, offset);
+        int index = getWord(location);
+        int bit = getBit(location);
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+        cout << "data in main get - location: " << location << " index: " << index << " bit: " << bit << endl;
+        #endif
+
+        #endif
+
+
+        #ifdef CELL_MATRIX_DEBUG_LOGGING
+
+        #ifdef USE_VECTOR
+            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
+            cout << "raw byte after processing: " << std::bitset<64>((_grid.at(index) & (static_cast<uint64_t>(1) << bit))) << endl;
+            cout << "value after processing: " << (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) << endl;
+            #endif
+
+            #ifdef USE_ARRAY
+            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
+            cout << "raw byte after processing: " << std::bitset<64>((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit))) << endl;
+            cout << "value after processing: " << ((_arrayGrid[index]) & (static_cast<uint64_t>(1) << bit)) << endl;
+            #endif
+
+            #ifdef USE_ARRAY_2D
+            cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
+            #endif
+
+        #endif
+
+        int val;
+
+        #ifdef USE_VECTOR
+        val = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
+
+        val += index >= this->columns() ? ((_grid.at(index - this->columns()) & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
+        val += index < this->rows() * (this->_columns() - 1) - 1 ? ((_grid.at(index - this->columns()) & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
+        #endif
+
+        #ifdef USE_ARRAY
+        val = ((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1);
+
+        val += index >= this->columns() ? ((_arrayGrid[index - this->columns()] & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
+        val += index < this->rows() * (this->_columns() - 1) - 1 ? ((_arrayGrid[index - this->columns()] & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
+        #endif
+
+        #ifdef USE_ARRAY_2D
+        val = _2DGrid[row][(_columns * offset) + column] == 1;
+
+        val += row > 0 ? (_2DGrid[row - 1][(_columns * offset) + column]) : 0;
+        val += row < (this->rows() - 1) ? (_2DGrid[row + 1][(_columns * offset) + column]) : 0;
+
+//        val = _2DGrid[row][(column * (offset+ 1)) + offset] == 1;
+//
+//        val += row > 0 ? (_2DGrid[row - 1][(column * (offset+ 1)) + offset]) : 0;
+//        val += row < (this->rows() - 1) ? (_2DGrid[row + 1][(column * (offset+ 1)) + offset]) : 0;
         #endif
 
         return val;

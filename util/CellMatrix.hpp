@@ -8,11 +8,13 @@
 #include <chrono>
 #include <iostream>
 #include <random>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include <mutex>
 #include <memory>
 #include <bitset>
+#include <functional>
 
 //#define CELL_MATRIX_DEBUG_LOGGING
 
@@ -91,16 +93,22 @@ namespace util {
         }
 
         bool set(const int row, const int column, const bool val) {
-            return set(row, column, val, _offset);
+            return set(row, column, val, getOffset());
         }
 
         bool set(int row, int column, bool val, int offset);
 
         [[nodiscard]] bool get(const int row, const int column) const {
-            return get(row, column, _offset);
+            return get(row, column, getOffset());
         }
 
         [[nodiscard]] bool get(int row, int column, int offset) const;
+
+        [[nodiscard]] int getVerticalWindow(const int row, const int col) const {
+            return getVerticalWindow(row, col, getOffset());
+        }
+
+        [[nodiscard]] int getVerticalWindow(int row, int column, int offset) const;
 
         [[nodiscard]] int getOffset() const {
             return _offset;

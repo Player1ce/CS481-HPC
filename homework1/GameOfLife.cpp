@@ -23,22 +23,23 @@ using namespace std;
 using namespace util;
 
 #define DEBUG_LOGGING
-// #define CELL_UPDATE_DEBUG_LOGGING
 
 
 
 int main(int argc, char** argv) {
 
-    int rows = 5000;
+    int rows = 5;
     int columns = rows;
 
-    int iterations = 5000;
+    int iterations = 1;
+
+    constexpr bool useInitializerList = true;
 
     constexpr int maxOffset = 1;
 
     constexpr int printThreshold = 50;
 
-    constexpr int numThreads = 10;
+    constexpr int numThreads = 1;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
@@ -72,13 +73,32 @@ int main(int argc, char** argv) {
     cout << "fill with random complete" << endl;
     #endif
 
-     vector<bool> initializer = {
-         true, true, false,
-         true, true, false,
-         false, false, false
-     };
+    vector<bool> initializer = {
+            true, true, false,
+            true, true, false,
+            false, false, false
+    };
 
-    // matrix.setFromVector(initializer);
+    vector<bool> initializer2 = {
+            true, true, false, false, true,
+            false, true, true, false, false,
+            true, true, false, false, true,
+            false, true, true, true, true,
+            true, true, true, false, true
+    };
+
+    vector<bool> test2 = {
+        true, true, true, false, false,
+        false, false, true, true, false,
+        true, false, false, false, true,
+        false, false, false, false, true,
+        true, false, false, false, true,
+    };
+
+    if (useInitializerList) {
+//        matrix.fillFromVector(initializer);
+        matrix.fillFromVector(initializer2);
+    }
 
     const int sum = matrix.getSum();
 
@@ -97,13 +117,17 @@ int main(int argc, char** argv) {
 
     start = chrono::system_clock::now();
 
+    bool updateOccurred;
+
     auto groups = calculateRowGroups(matrix, numThreads);
 
     for (int i = 0; i < iterations; i++) {
 
-//        updateCells(matrix);
+//        updateOccurred = updateCells(matrix);
 
-        bool updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
+//        updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
+
+        updateOccurred = updateCellsUsingThreadPoolOptimized(matrix, threadPool, groups);
 
         if (i == printCount * multiplier) {
             cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
@@ -126,6 +150,23 @@ int main(int argc, char** argv) {
     if (rows*columns < printThreshold*printThreshold) {
         cout << "end matrix " << endl;
         cout << matrix << endl;
+    }
+
+    if (useInitializerList) {
+        if (matrix.rows() * matrix.columns() < printThreshold * printThreshold) {
+            bool success = true;
+
+            for (int i = 0; i < matrix.rows(); i++) {
+                for (int j = 0; j < matrix.columns(); j++) {
+                    if (test2.at((i * rows) + j) != matrix.get(i, j)) {
+                        success = false;
+                        break;
+                    }
+                }
+            }
+
+            cout << "Success2: " << boolalpha << success << endl;
+        }
     }
 
     const double percent = (sum / static_cast<double>(rows*columns)) * 100.0;

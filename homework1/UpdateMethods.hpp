@@ -7,12 +7,16 @@
 
 #include "../util/CellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
+#include "../util/FixedSizeQueue.hpp"
 
 #include <mutex>
 #include <vector>
 #include <string>
 #include <atomic>
 #include <iostream>
+
+//#define DEBUG_LOGGING
+//#define CELL_UPDATE_DEBUG_LOGGING
 
 
 //TODO: integrate a method into the CellMatrix that uses a single mutex to lock all writes to a certain offset of the matrix
@@ -61,9 +65,9 @@ inline bool updateCellsRowOptimized(util::CellMatrix matrix,
 
     for (int row = rowStart; row < rowEnd; row++) {
         for (int colOffset = -1; colOffset <=1; colOffset++) {
-#ifdef CELL_UPDATE_DEBUG_LOGGING
+            #ifdef CELL_UPDATE_DEBUG_LOGGING
             // cout << " " << grid.get(row + rowOffset, column + colOffset);
-#endif
+            #endif
             // neighborsAlive += grid.get(rowStart + rowOffset, colStart + colOffset);
         }
     }
@@ -72,10 +76,10 @@ inline bool updateCellsRowOptimized(util::CellMatrix matrix,
 }
 
 
-inline bool getCellUpdate(bool currentState, int neighborsAlive) {
-#ifdef CELL_UPDATE_DEBUG_LOGGING
-    cout << "val: " << neighborsAlive << endl;
-#endif
+inline bool getCellUpdate(util::CellMatrix &grid, int row, int column, int neighborsAlive) {
+    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    std::cout <<" | val: " << neighborsAlive << " ";
+    #endif
 
     switch (neighborsAlive) {
         case (-1):
@@ -85,7 +89,37 @@ inline bool getCellUpdate(bool currentState, int neighborsAlive) {
             break;
 
         case(2):
-            return currentState;
+            return grid.get(row, column) == 1;;
+            break;
+
+        case(3):
+            return true;
+            break;
+
+        default:
+            return false;
+            break;
+    }
+}
+
+
+inline bool getCellUpdateSubtractingState(int neighborsAlive, const bool cellAlive) {
+
+    neighborsAlive -= (cellAlive ? 1 : 0);
+
+//    #ifdef CELL_UPDATE_DEBUG_LOGGING
+    std::cout <<" | val: " << neighborsAlive << " ";
+//    #endif
+
+    switch (neighborsAlive) {
+        case (-1):
+        case (0):
+        case (1):
+            return false;
+            break;
+
+        case(2):
+            return cellAlive;
             break;
 
         case(3):
@@ -104,17 +138,17 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
     int neighborsAlive = 0;
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
-    cout << "[" << endl;
+    std::cout << "[" << std::endl;
     #endif
 
     for (int i = -1; i <= 1; i++) {
     #ifdef CELL_UPDATE_DEBUG_LOGGING
-        cout << "[";
+        std::cout << "[";
     #endif
 
         for (int j = -1; j <=1; j++) {
     #ifdef CELL_UPDATE_DEBUG_LOGGING
-            cout << " " << grid.get(row + i, column + j);
+            std::cout << " " << grid.get(row + i, column + j);
     #endif
             if (i != 0 || j != 0) {
                 neighborsAlive += grid.get(row + i, column + j);
@@ -122,7 +156,7 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
         }
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
-        cout << "]" << endl;
+        std::cout << "]" << std::endl;
     #endif
 
         if (neighborsAlive >= 4) {
@@ -131,10 +165,13 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
     }
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
-    cout << "]" << endl;
+    std::cout << "]" << std::endl;
 
-    cout << "val: " << neighborsAlive << endl;
+    std::cout << "val: " << neighborsAlive << std::endl;
     #endif
+
+    std::cout <<" | val: " << neighborsAlive << " ";
+
 
     switch (neighborsAlive) {
         case (-1):
@@ -158,115 +195,101 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
 }
 
 inline bool updateCells(util::CellMatrix &matrix) {
+    bool update = false;
+
     const int nextOffset = matrix.getNextOffset();
     for (int i = 0; i < matrix.rows(); i++) {
         for (int j = 0; j < matrix.columns(); j++) {
-            matrix.set(i, j, getCellUpdate(matrix, i, j), nextOffset);
+            update |= matrix.set(i, j, getCellUpdate(matrix, i, j), nextOffset);
         }
     }
     matrix.incrementOffset();
+
+//    return update;
+    return true; // TODO: fix this in set
 }
 
 //TODO: Make a system that reserves acess to a certain set of indices then only apply mutexes to the overlapping ones
 //      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
-void updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadPool &threadPool, int numGroups = -1) {
-    // cout << "Update Started" << endl;
+bool updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
+    // std::cout << "Update Started" << std::endl;
 
-    if (numGroups == -1) {
-        numGroups = static_cast<int>(threadPool.getNumThreads());
-    } else if (numGroups == -2) {
-        numGroups = matrix.rows();
-    } else if (numGroups < 0) {
-        numGroups = static_cast<int>(threadPool.getNumThreads());
-    }
-
-    if (numGroups > matrix.rows()) {
-        numGroups = matrix.rows();
-    }
+    std::atomic<bool> updateOccurred = false;
 
     const int nextOffset = matrix.getNextOffset();
-
-    int groupSize = matrix.rows()/numGroups;
-    int overhang = matrix.rows()%numGroups;
-    int previousOverhang = 0;
-    int allocatedOverhang = 0;
-
-    std::vector<std::pair<int, int>> rowGroups(numGroups);
-
-    for (int i = 0; i < numGroups; i++) {
-        rowGroups.at(i) = std::make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
-
-        if (i < overhang) {
-            rowGroups.at(i).second += 1;
-            previousOverhang = 1;
-            allocatedOverhang++;
-        } else {
-            previousOverhang = 0;
-        }
-    }
+    const int currentOffset = matrix.getOffset();
 
     // TODO: need to expand cellgroups by 1 on all sides with new neighbor placement method
 
-    // cout << "[";
+    // std::cout << "[";
     // for (int i = 0; i < rowGroups.size(); i++) {
-    //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    //     std::cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
     // }
-    // cout << "]" << endl;
+    // std::cout << "]" << std::endl;
 
-    std::shared_mutex m;
 
     for (auto & rowGroup : rowGroups) {
-        // for (int row = 0; row < matrix.rows(); row++) {
-        threadPool.enqueue([nextOffset
-                                   // , row
+        threadPool.enqueue([nextOffset, currentOffset
                                    , &rowGroup
-                                   , &matrix, &m] {
-            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+                                   , &matrix
+                                   , &updateOccurred] {
+//            std::vector<int> costTracker(rowGroup.second - rowGroup.first);
+
+            bool updateStored = false;
+            FixedSizeQueue<int, 3> windowTracker;
+            int sum = 0;
+
+
+            auto evaluator = [&windowTracker](const bool cellAlive) {
+                return getCellUpdateSubtractingState(windowTracker.sum(), cellAlive);
+            };
 
             for (int row = rowGroup.first; row < rowGroup.second; row++) {
-                for (int col = 0; col < matrix.columns(); col++) {
+                windowTracker.push(0);
+                for (int col = 0; col < matrix.columns() + 1; col++) {
 
-                    bool val = matrix.get(row, col);
+                    int window = matrix.getVerticalWindow(row, col);
+                    windowTracker.push(window);
 
+                    std::cout << "sum: " << windowTracker.sum() << " | ";
+                    std::cout << std::endl;
 
-                    // shared_lock read_lock(m);
-                    for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
-                        for (int colOffset = -1; colOffset <= 1; colOffset++) {
-                            if (colOffset == 0 && rowOffset == 0) {
-                                continue;
-                            }
-                            else {
-                                matrix.set(row + rowOffset, col + colOffset, -1);
-                            }
-                        }
+                    const bool workingUpdate = getCellUpdate(matrix, row, col);
+                    std::cout << "workingUpdate: " << workingUpdate << " | ";
+
+                    const bool updateMethod1 = getCellUpdateSubtractingState(windowTracker.sum(), matrix.get(row, col-1));
+                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
+
+//                    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//                    std::cout << std::endl;
+
+//                    #endif
+
+                    if (matrix.set(row, col-1, updateMethod1, nextOffset) && !updateStored) {
+                        updateOccurred = true;
+                        updateStored = true;
                     }
 
-                    matrix.set(row, col, matrix.getNextOffset());
-                    // read_lock.unlock();
-
-                    // unique_lock write_lock(m);
-//                    matrix.set(row, col, update, nextOffset);
-                    // write_lock.unlock();
-
-                    // cout << "i: " << i << ", j: " << j << endl;
                 }
             }
         });
     }
 
-    // cout << "ThreadPool started" << endl;
+    // std::cout << "ThreadPool started" << std::endl;
 
     // threadPool.enqueue([] {
     //     this_thread::sleep_for(chrono::seconds(10));
-    //     cout << "Thread ID: " << this_thread::get_id() << endl;
+    //     std::cout << "Thread ID: " << this_thread::get_id() << std::endl;
     // });
 
     threadPool.waitTillEmpty();
 
-    // cout << "ThreadPool stopped" << endl;
+    // std::cout << "ThreadPool stopped" << std::endl;
 
     matrix.incrementOffset();
+
+    return updateOccurred;
 }
 
 std::vector<std::pair<int, int>> calculateRowGroups(util::CellMatrix &matrix, int numGroups) {
@@ -303,13 +326,13 @@ std::vector<std::pair<int, int>> calculateRowGroups(util::CellMatrix &matrix, in
 
 
 bool updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
-    // cout << "Update Started" << endl;
+    // std::cout << "Update Started" << std::endl;
 
-    // cout << "[";
+    // std::cout << "[";
     // for (int i = 0; i < rowGroups.size(); i++) {
-    //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    //     std::cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
     // }
-    // cout << "]" << endl;
+    // std::cout << "]" << std::endl;
 
     std::atomic<bool> updateOccurred = false;
 
@@ -331,33 +354,29 @@ bool updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
                 for (int col = 0; col < matrix.columns(); col++) {
 
                     // TODO: need to implement this lock in the CellMatrix at one point for efficiency
-                    // shared_lock read_lock(m);
-                    const bool update = getCellUpdate(matrix, row, col);
-                    // read_lock.unlock();
 
-                    // unique_lock write_lock(m);
+                    const bool update = getCellUpdate(matrix, row, col);
+
                     if (matrix.set(row, col, update, nextOffset) && !updateStored) {
                         updateOccurred = true;
                         updateStored = true;
                     }
-                    // write_lock.unlock();
 
-                    // cout << "i: " << i << ", j: " << j << endl;
                 }
             }
         });
     }
 
-    // cout << "ThreadPool started" << endl;
+    // std::cout << "ThreadPool started" << std::endl;
 
     // threadPool.enqueue([] {
     //     this_thread::sleep_for(chrono::seconds(10));
-    //     cout << "Thread ID: " << this_thread::get_id() << endl;
+    //     std::cout << "Thread ID: " << this_thread::get_id() << std::endl;
     // });
 
     threadPool.waitTillEmpty();
 
-    // cout << "ThreadPool stopped" << endl;
+    // std::cout << "ThreadPool stopped" << std::endl;
 
     matrix.incrementOffset();
     return updateOccurred;
