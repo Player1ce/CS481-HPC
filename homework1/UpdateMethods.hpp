@@ -234,7 +234,7 @@ bool updateCellsUsingThreadPoolOptimized(util::CellMatrix &matrix, util::ThreadP
                                    , &matrix
                                    , &updateOccurred] {
             bool updateStored = false;
-            FixedSizeQueue<int, 3> windowTracker;
+            util::FixedSizeQueue<int, 3> windowTracker;
 
 //            auto evaluator = [&windowTracker](const bool cellAlive) {
 //                return getCellUpdateSubtractingState(windowTracker.sum(), cellAlive);

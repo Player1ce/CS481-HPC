@@ -3,3 +3,6 @@
 //
 
 #include "FixedSizeQueue.hpp"
+
+namespace util {
+};
