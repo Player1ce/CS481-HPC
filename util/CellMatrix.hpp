@@ -26,45 +26,11 @@ namespace util {
     // row major
     class CellMatrix {
     public:
-        CellMatrix(const int rows, const int columns, const int maxOffset = 1)
-            : _rows(rows),
-              _columns(columns),
-              _maxOffset(maxOffset),
-              _offset(0),
-              _nextOffset(calculateNextOffset())
-        {
-            #ifdef USE_VECTOR
-            _grid.resize(((rows * columns + 63) * (_maxOffset + 1)) / 64);
-            #endif
+        CellMatrix(int rows, int columns, int maxOffset = 1);
 
-            #ifdef USE_ARRAY
-            int arraySize = (((rows * columns + 63) * (_maxOffset + 1)) / 64);
-            _arrayGrid = new uint64_t[arraySize]();
-            #endif
+        explicit CellMatrix(int size, int maxOffset = 1);
 
-            #ifdef USE_ARRAY_2D
-            _2DGrid = new uint8_t*[rows]();
-            for (int i = 0; i < rows; i++) {
-                _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
-            }
-            #endif
-        }
-
-        explicit CellMatrix(const int size, const int maxOffset = 1)
-            : CellMatrix(size, size, maxOffset)
-        {}
-
-        ~CellMatrix() {
-            #ifdef USE_ARRAY
-            delete[] _arrayGrid;
-            _arrayGrid = nullptr;
-            #endif
-
-            #ifdef USE_ARRAY_2D
-            delete[] _2DGrid;
-            _2DGrid = nullptr;
-            #endif
-        }
+        ~CellMatrix();
 
         void fillWithRandom(int min= 0, int max = 1);
 
@@ -84,39 +50,31 @@ namespace util {
             return _rows == _columns;
         }
 
-        [[nodiscard]] int rows() const {
+        [[nodiscard]] inline int rows() const {
             return _rows;
         }
 
-        [[nodiscard]] int columns() const {
+        [[nodiscard]] inline int columns() const {
             return _columns;
         }
 
-        bool set(const int row, const int column, const bool val) {
-            return set(row, column, val, getOffset());
-        }
+        bool set(int row, int column, bool val);
 
         bool set(int row, int column, bool val, int offset);
 
-        bool integratedSet(const int row, const int column, std::function<bool(bool)> evaluator, const int previousOffset) {
-            return integratedSet(row, column, std::move(evaluator), previousOffset, getOffset());
-        }
+        bool integratedSet(int row, int column, std::function<bool(bool)> evaluator, int previousOffset);
 
         bool integratedSet(int row, int column, std::function<bool(bool)> evaluator, int previousOffset, int offset);
 
-        [[nodiscard]] bool get(const int row, const int column) const {
-            return get(row, column, getOffset());
-        }
+        [[nodiscard]] bool get(int row, int column) const;
 
         [[nodiscard]] bool get(int row, int column, int offset) const;
 
-        [[nodiscard]] int getVerticalWindow(const int row, const int col) const {
-            return getVerticalWindow(row, col, getOffset());
-        }
+        [[nodiscard]] int getVerticalWindow(int row, int col) const;
 
         [[nodiscard]] int getVerticalWindow(int row, int column, int offset) const;
 
-        [[nodiscard]] int getOffset() const {
+        [[nodiscard]] inline int getOffset() const {
             return _offset;
         }
 
@@ -124,11 +82,7 @@ namespace util {
             return _nextOffset;
         }
 
-        int incrementOffset() { // NOLINT(*-use-nodiscard)
-            _offset = getNextOffset();
-            _nextOffset = calculateNextOffset();
-            return _offset;
-        }
+        int incrementOffset(); // NOLINT(*-use-nodiscard)
 
         [[nodiscard]] int getSum() const;
 

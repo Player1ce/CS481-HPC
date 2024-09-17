@@ -8,6 +8,46 @@ using namespace std;
 
 namespace util {
 
+    CellMatrix::CellMatrix(const int rows, const int columns, const int maxOffset)
+            : _rows(rows),
+              _columns(columns),
+              _maxOffset(maxOffset),
+              _offset(0),
+              _nextOffset(calculateNextOffset())
+    {
+        #ifdef USE_VECTOR
+        _grid.resize(((rows * columns + 63) * (_maxOffset + 1)) / 64);
+        #endif
+
+        #ifdef USE_ARRAY
+        int arraySize = (((rows * columns + 63) * (_maxOffset + 1)) / 64);
+            _arrayGrid = new uint64_t[arraySize]();
+        #endif
+
+        #ifdef USE_ARRAY_2D
+        _2DGrid = new uint8_t*[rows]();
+        for (int i = 0; i < rows; i++) {
+            _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
+        }
+        #endif
+    }
+
+    CellMatrix::CellMatrix(const int size, const int maxOffset)
+            : CellMatrix(size, size, maxOffset)
+    {}
+
+    CellMatrix::~CellMatrix() {
+        #ifdef USE_ARRAY
+        delete[] _arrayGrid;
+            _arrayGrid = nullptr;
+        #endif
+
+        #ifdef USE_ARRAY_2D
+        delete[] _2DGrid;
+        _2DGrid = nullptr;
+        #endif
+    }
+
     void CellMatrix::fillWithRandom(const int min, const int max)
     {
         // Create a random number generator
@@ -54,6 +94,10 @@ namespace util {
 
     int CellMatrix::getBit(const int location) const {
         return location % 64;
+    }
+
+    bool CellMatrix::set(const int row, const int column, const bool val) {
+        return set(row, column, val, getOffset());
     }
 
     bool CellMatrix::set(const int row, const int column, const bool val, const int offset) {
@@ -134,6 +178,11 @@ namespace util {
             return oldVal != val;
             #endif
         }
+    }
+
+    bool CellMatrix::integratedSet(const int row, const int column, std::function<bool(bool)> evaluator,
+                                   const int previousOffset) {
+        return integratedSet(row, column, std::move(evaluator), previousOffset, getOffset());
     }
 
     bool CellMatrix::integratedSet(const int row, const int column, std::function<bool(bool)> evaluator, const int previousOffset, const int offset) {
@@ -231,6 +280,10 @@ namespace util {
 
     }
 
+    [[nodiscard]] bool CellMatrix::get(const int row, const int column) const {
+        return get(row, column, getOffset());
+    }
+
     bool CellMatrix::get(const int row, const int column, const int offset) const {
         if (offset > _maxOffset || offset < 0) {
             cout << "getReceived invalid offset: " << offset << endl;
@@ -296,6 +349,10 @@ namespace util {
         #endif
 
         return val;
+    }
+
+    [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int col) const {
+        return getVerticalWindow(row, col, getOffset());
     }
 
     [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int column, const int offset) const {
@@ -377,6 +434,12 @@ namespace util {
         #endif
 
         return val;
+    }
+
+    int CellMatrix::incrementOffset() {
+        _offset = getNextOffset();
+        _nextOffset = calculateNextOffset();
+        return _offset;
     }
 
     int CellMatrix::getSum() const {
