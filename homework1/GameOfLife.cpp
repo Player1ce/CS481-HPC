@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
-    constexpr int numThreads = 10;
+    int numThreads = 10;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
@@ -55,6 +55,13 @@ int main(int argc, char** argv) {
         rows = atoi(argv[1]);
         columns = atoi(argv[2]);
         iterations = atoi(argv[3]);
+    }
+    else if (argc == 5) {
+        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << " and numThreads: " << argv[4] << endl;
+        rows = atoi(argv[1]);
+        columns = atoi(argv[2]);
+        iterations = atoi(argv[3]);
+        numThreads = atoi(argv[4]);
     }
 
     int printCount = max(iterations / 10, 1);
