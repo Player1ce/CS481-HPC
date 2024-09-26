@@ -33,7 +33,7 @@ namespace util {
             if (_useRunningSum && isFull) {
                 _runningSum += value - data[tail];
             }
-            else {
+            else if (_useRunningSum) {
                 _runningSum += value;
             }
 
