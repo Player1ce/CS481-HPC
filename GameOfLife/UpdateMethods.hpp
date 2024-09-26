@@ -209,6 +209,93 @@ inline bool updateCells(util::CellMatrix &matrix) {
 //TODO: Make a system that reserves acess to a certain set of indices then only apply mutexes to the overlapping ones
 //      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
+
+bool updateCells_Windows(util::CellMatrix &matrix) {
+    // std::cout << "Update Started" << std::endl;
+
+    bool updateOccurred = false;
+
+    const int nextOffset = matrix.getNextOffset();
+    const int currentOffset = matrix.getOffset();
+
+    // TODO: need to expand cellGroups by 1 on all sides with new neighbor placement method
+
+    // std::cout << "[";
+    // for (int i = 0; i < rowGroups.size(); i++) {
+    //     std::cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    // }
+    // std::cout << "]" << std::endl;
+
+    util::FixedSizeQueue<int, 3> windowTracker(true);
+
+//            auto evaluator = [&windowTracker](const bool cellAlive) {
+//                return getCellUpdateSubtractingState(windowTracker.sum(), cellAlive);
+//            };
+
+    for (int row = 0; row < matrix.rows(); row++) {
+
+        windowTracker.resetQueue();
+
+        windowTracker.push(0);
+        windowTracker.push(matrix.getVerticalWindow(row, 0));
+
+        for (int col = 1; col < matrix.columns(); col++) {
+
+            windowTracker.push(matrix.getVerticalWindow(row, col));
+
+//                    std::cout << "sum: " << windowTracker.sum() << " | ";
+//                    std::cout << std::endl;
+
+//                    const bool workingUpdate = getCellUpdate(matrix, row, col);
+//                    std::cout << "workingUpdate: " << workingUpdate << " | ";
+
+            const bool updateMethod1 = getCellUpdateSubtractingState(windowTracker.sum(), matrix.get(row, col-1));
+
+
+//                    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
+//                    #endif
+
+            if (matrix.set(row, col-1, updateMethod1, nextOffset) && !updateOccurred) {
+                updateOccurred = true;
+            }
+
+        }
+
+        windowTracker.push(0);
+
+//                std::cout << "sum: " << windowTracker.sum() << std::endl;
+
+//                    const bool workingUpdate = getCellUpdate(matrix, row, col);
+//                    std::cout << "workingUpdate: " << workingUpdate << " | ";
+
+        const bool updateMethod1 = getCellUpdateSubtractingState(windowTracker.sum(), matrix.get(row, matrix.columns() - 1));
+
+
+//                    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//                    std::cout << "updateMethod1: " << updateMethod1 << " | ";
+//                    #endif
+
+        if (matrix.set(row, matrix.columns()-1, updateMethod1, nextOffset) && !updateOccurred) {
+            updateOccurred = true;
+        }
+
+    }
+
+    // std::cout << "ThreadPool started" << std::endl;
+
+    // threadPool.enqueue([] {
+    //     this_thread::sleep_for(chrono::seconds(10));
+    //     std::cout << "Thread ID: " << this_thread::get_id() << std::endl;
+    // });
+
+    // std::cout << "ThreadPool stopped" << std::endl;
+
+    matrix.incrementOffset();
+
+    return updateOccurred;
+}
+
 bool updateCellsUsingThreadPool_Windows(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
     // std::cout << "Update Started" << std::endl;
 

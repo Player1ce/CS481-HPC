@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     int rows = 1000;
     int columns = rows;
 
-    int iterations = 5000;
+    int iterations = 1000;
 
     constexpr bool useInitializerList = false;
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 
     start = chrono::system_clock::now();
 
-    bool updateOccurred;
+    bool updateOccurred = false;
 
     auto groups = calculateRowGroups(matrix, numThreads);
 
@@ -132,12 +132,14 @@ int main(int argc, char** argv) {
 
 //        updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
 
-        updateOccurred = updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);
+        updateOccurred = updateCells_Windows(matrix);
 
-//        if (i == printCount * multiplier) {
-//            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
-//              multiplier++;
-//        }
+        // updateOccurred = updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);
+
+        if (i == printCount * multiplier) {
+            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
+              multiplier++;
+        }
 
         if (!updateOccurred) {
             cout << "exiting early because no update" << endl;

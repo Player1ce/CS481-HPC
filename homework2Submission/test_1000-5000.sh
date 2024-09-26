@@ -7,9 +7,10 @@ module load intel
 # ~size: 2MB +- some
 
 # params:
+# express
 # cores: 1
+# time: 1:00:00 (default)
 # mem: 100Mb
-# time: 0:15:00
 
 ./Homework2 1000 5000
 ./Homework2 1000 5000

@@ -5,22 +5,16 @@
 #ifndef CELL_MATRIX_HPP
 #define CELL_MATRIX_HPP
 
-#include <chrono>
 #include <iostream>
-#include <random>
-#include <utility>
-#include <vector>
 #include <sstream>
-#include <mutex>
+#include <random>
 #include <memory>
 #include <bitset>
 #include <functional>
 
 //#define CELL_MATRIX_DEBUG_LOGGING
 
-//#define USE_ARRAY
-#define USE_ARRAY_2D
-// #define USE_VECTOR
+//TODO: make a matrix that uses two arrays to avoid math operations and see how that goes
 
 namespace util {
     // row major
@@ -99,42 +93,12 @@ namespace util {
             return (_offset + 1) % (_maxOffset + 1);
         }
 
-        void allocArray(int rows, int cols, int maxOffset) {
+        void allocArray(int rows, int cols, int maxOffset);
 
-//            _integerBlock = (uint8_t *)malloc(rows*cols*sizeof(uint8_t));
-//            _2DGrid = (uint8_t **)malloc(rows*sizeof(uint8_t*));
+        void deleteArray();
 
-            _integerBlock = new uint8_t[rows * cols * (maxOffset + 1)];
-            _2DGrid = new uint8_t*[rows];
-
-            for (int i = 0; i < rows; i++)
-                _2DGrid[i] = &_integerBlock[i * cols * (maxOffset+ 1)];
-        }
-
-        void freeArray() {
-            delete[] _integerBlock;
-            delete[] _2DGrid;
-
-//            delete[] arr[0];
-//            delete[] arr;
-
-//            free(&a[0][0]);
-//            free(arr[0]);
-//            free(arr);
-        }
-
-        #ifdef USE_VECTOR
-        std::vector<uint64_t> _grid;
-        #endif
-
-        #ifdef USE_ARRAY
-        uint64_t* _arrayGrid;
-        #endif
-
-        #ifdef USE_ARRAY_2D
         uint8_t* _integerBlock;
         uint8_t** _2DGrid;
-        #endif
 
         int _rows, _columns;
         int _maxOffset = 1, _offset = 0, _nextOffset = 1;
