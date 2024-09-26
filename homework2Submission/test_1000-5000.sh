@@ -2,7 +2,6 @@
 
 module load intel
 
-
 # calculated time: 2.3 min
 
 ./Homework2 1000 5000
