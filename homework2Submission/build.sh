@@ -1,9 +1,9 @@
-cmake . -B build
+cmake . -B auto-build
 
-cd build || exit
+cd auto-build || exit
 
 make
 
-mv Homework1 ..
+mv Homework2 ..
 
 cd ..
