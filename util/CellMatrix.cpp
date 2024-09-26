@@ -25,10 +25,11 @@ namespace util {
         #endif
 
         #ifdef USE_ARRAY_2D
-        _2DGrid = new uint8_t*[rows]();
-        for (int i = 0; i < rows; i++) {
-            _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
-        }
+//        _2DGrid = new uint8_t*[rows]();
+//        for (int i = 0; i < rows; i++) {
+//            _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
+//        }
+        allocArray(rows, columns, _maxOffset);
         #endif
     }
 
@@ -43,16 +44,18 @@ namespace util {
         #endif
 
         #ifdef USE_ARRAY_2D
-        delete[] _2DGrid;
-        _2DGrid = nullptr;
+//        delete[] _2DGrid;
+//        _2DGrid = nullptr;
+
+        freeArray();
         #endif
     }
 
     void CellMatrix::fillWithRandom(const int min, const int max)
     {
         // Create a random number generator
-        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-        std::default_random_engine generator(seed);
+        std::random_device seed;
+        std::mt19937 generator(seed());
 
         // Create a distribution for your desired range
         std::uniform_int_distribution<int> distribution(min, max);
@@ -106,7 +109,7 @@ namespace util {
         }
 
         // create an infinite border of zeroes around the grid.
-        if (row < 0 || row > _columns || column < 0 || column > _rows) {
+        if (row < 0 || row > this->rows() || column < 0 || column > this->columns()) {
             #ifdef CELL_MATRIX_DEBUG_LOGGING
             cout << "Error: Attempting to set out of range element will do nothing." << endl;
             #endif
@@ -361,12 +364,11 @@ namespace util {
         }
 
         // create an infinite border of zeroes around the grid.
-        if (row < 0 || row >= _columns || column < 0 || column >= _rows) {
+        if (row < -1 || row > _rows || column < -1 || column > _columns) {
         #ifdef CELL_MATRIX_DEBUG_LOGGING
-            cout << "Debug: Accessing out of range cell returning zero." << endl;
+            cout << "Debug: Accessing out of range column for window returning zero." << endl;
         #endif
-
-            return false;
+            return 0;
         }
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
@@ -422,7 +424,9 @@ namespace util {
         #endif
 
         #ifdef USE_ARRAY_2D
-        val = _2DGrid[row][(_columns * offset) + column] == 1;
+        val = _2DGrid[row][(_columns * offset) + column];
+
+        // TODO: make this much more efficient by removing if statements
 
         val += row > 0 ? (_2DGrid[row - 1][(_columns * offset) + column]) : 0;
         val += row < (this->rows() - 1) ? (_2DGrid[row + 1][(_columns * offset) + column]) : 0;

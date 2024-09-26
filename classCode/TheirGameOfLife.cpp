@@ -11,8 +11,11 @@
    Use -DDEBUG2 for output at each iteration.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+//#define DEBUG1
+//#define DEBUG2
+
+#include <random>
+#include <iostream>
 #include <sys/time.h>
 
 #define DIES   0
@@ -38,7 +41,8 @@ int **allocarray(int P, int Q) {
 }
 
 void freearray(int **a) {
-    free(&a[0][0]);
+//    free(&a[0][0]);
+    free(a[0]);
     free(a);
 }
 
@@ -86,7 +90,7 @@ int compute(int **life, int **temp, int N) {
     return flag;
 }
 
-
+// 5000 1000: 100
 int main(int argc, char **argv) {
     int N, NTIMES, **life=NULL, **temp=NULL, **ptr ;
     int i, j, k, flag=1;
@@ -110,11 +114,18 @@ int main(int argc, char **argv) {
         temp[0][i] = temp[i][0] = temp[N+1][i] = temp[i][N+1] = DIES ;
     }
 
+    // Create a random number generator
+    std::random_device seed;
+    std::mt19937 generator(seed());
+
+    // Create a distribution for your desired range
+    std::uniform_int_distribution<int> distribution(0, 1);
+
     /* Initialize the life matrix */
     for (i = 1; i < N+1; i++) {
-        srand(54321|i);
+//        srand(54321|i);
         for (j = 1; j< N+1; j++)
-            if (drand48() < 0.5)
+            if (distribution(generator) < 0.5)
                 life[i][j] = ALIVE ;
             else
                 life[i][j] = DIES ;

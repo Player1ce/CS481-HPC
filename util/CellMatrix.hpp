@@ -99,6 +99,30 @@ namespace util {
             return (_offset + 1) % (_maxOffset + 1);
         }
 
+        void allocArray(int rows, int cols, int maxOffset) {
+
+//            _integerBlock = (uint8_t *)malloc(rows*cols*sizeof(uint8_t));
+//            _2DGrid = (uint8_t **)malloc(rows*sizeof(uint8_t*));
+
+            _integerBlock = new uint8_t[rows * cols * (maxOffset + 1)];
+            _2DGrid = new uint8_t*[rows];
+
+            for (int i = 0; i < rows; i++)
+                _2DGrid[i] = &_integerBlock[i * cols * (maxOffset+ 1)];
+        }
+
+        void freeArray() {
+            delete[] _integerBlock;
+            delete[] _2DGrid;
+
+//            delete[] arr[0];
+//            delete[] arr;
+
+//            free(&a[0][0]);
+//            free(arr[0]);
+//            free(arr);
+        }
+
         #ifdef USE_VECTOR
         std::vector<uint64_t> _grid;
         #endif
@@ -108,6 +132,7 @@ namespace util {
         #endif
 
         #ifdef USE_ARRAY_2D
+        uint8_t* _integerBlock;
         uint8_t** _2DGrid;
         #endif
 

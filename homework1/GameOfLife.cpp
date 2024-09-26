@@ -24,8 +24,6 @@ using namespace util;
 
 #define DEBUG_LOGGING
 
-
-
 int main(int argc, char** argv) {
 
     int rows = 1000;
@@ -39,7 +37,7 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
-    int numThreads = 10;
+    int numThreads = 1;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
@@ -134,12 +132,12 @@ int main(int argc, char** argv) {
 
 //        updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
 
-        updateOccurred = updateCellsUsingThreadPoolOptimized(matrix, threadPool, groups);
+        updateOccurred = updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);
 
-        if (i == printCount * multiplier) {
-            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
-              multiplier++;
-        }
+//        if (i == printCount * multiplier) {
+//            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
+//              multiplier++;
+//        }
 
         if (!updateOccurred) {
             cout << "exiting early because no update" << endl;
