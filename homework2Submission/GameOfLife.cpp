@@ -14,8 +14,7 @@ Instructions to run the program: ./Homework1 <board size> <iterations>
 #include <atomic>
 #include <shared_mutex>
 
-#include "../util/CellMatrix.hpp"
-#include "../util/ThreadPool.hpp"
+#include "CellMatrix.hpp"
 
 #include "UpdateMethods.hpp"
 
@@ -29,16 +28,14 @@ using namespace util;
 
 int main(int argc, char** argv) {
 
-    int rows = 5000;
+    int rows = 1000;
     int columns = rows;
 
-    int iterations = 5000;
+    int iterations = 1000;
 
     constexpr int maxOffset = 1;
 
     constexpr int printThreshold = 50;
-
-    constexpr int numThreads = 10;
 
     if (argc < 3) {
         cout << "Using coded constants" << endl;
@@ -91,8 +88,6 @@ int main(int argc, char** argv) {
         cout << matrix << endl;
     }
 
-     ThreadPool threadPool(numThreads);
-
     int multiplier = 1;
 
     start = chrono::system_clock::now();
@@ -101,7 +96,7 @@ int main(int argc, char** argv) {
 
 //        updateCells(matrix);
 
-        bool updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, numThreads);
+        bool updateOccurred = updateCells_updateTracked(matrix);
 
         if (i == printCount * multiplier) {
             cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
