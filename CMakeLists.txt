@@ -8,6 +8,6 @@ find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/homework1")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/GameOfLife")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/util")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/classCode")

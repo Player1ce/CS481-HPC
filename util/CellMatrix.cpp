@@ -15,22 +15,7 @@ namespace util {
               _offset(0),
               _nextOffset(calculateNextOffset())
     {
-        #ifdef USE_VECTOR
-        _grid.resize(((rows * columns + 63) * (_maxOffset + 1)) / 64);
-        #endif
-
-        #ifdef USE_ARRAY
-        int arraySize = (((rows * columns + 63) * (_maxOffset + 1)) / 64);
-            _arrayGrid = new uint64_t[arraySize]();
-        #endif
-
-        #ifdef USE_ARRAY_2D
-//        _2DGrid = new uint8_t*[rows]();
-//        for (int i = 0; i < rows; i++) {
-//            _2DGrid[i] = new uint8_t [columns * (_maxOffset + 1)];
-//        }
         allocArray(rows, columns, _maxOffset);
-        #endif
     }
 
     CellMatrix::CellMatrix(const int size, const int maxOffset)
@@ -38,17 +23,7 @@ namespace util {
     {}
 
     CellMatrix::~CellMatrix() {
-        #ifdef USE_ARRAY
-        delete[] _arrayGrid;
-            _arrayGrid = nullptr;
-        #endif
-
-        #ifdef USE_ARRAY_2D
-//        delete[] _2DGrid;
-//        _2DGrid = nullptr;
-
-        freeArray();
-        #endif
+        deleteArray();
     }
 
     void CellMatrix::fillWithRandom(const int min, const int max)
@@ -121,65 +96,17 @@ namespace util {
         cout << "inside main set row: " << row << " column: " << column << " val: " << val << " offset: " << offset << endl;
         #endif
 
-        #if defined(USE_ARRAY) || defined(USE_VECTOR)
-        int location = getLocation(row, column, offset);
-        int index = getWord(location);
-        int bit = getBit(location);
-        #endif
-
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
-        cout << "data in main set location: " << location << " index: " << index << " bit: " << bit << endl;
-        #endif
-
         if (val) {
-            #ifdef USE_VECTOR
-            bool oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
-            _grid.at(index) |= (static_cast<uint64_t>(1) << bit);
-            return oldVal != val;
-            #endif
 
-            #ifdef USE_ARRAY
-            bool oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
-            _arrayGrid[index] |= (static_cast<uint64_t>(1) << bit);
-            return oldVal != val;
-            #endif
-
-            #ifdef USE_ARRAY_2D
             bool oldVal = _2DGrid[row][(_columns * offset) + column];
             _2DGrid[row][(_columns * offset) + column] = 1;
             return oldVal != val;
-            #endif
 
-            #ifdef CELL_MATRIX_DEBUG_LOGGING
-
-            #ifdef USE_VECTOR
-            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY
-            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
-            #endif
-
-            #endif
         }
         else {
-            #ifdef USE_VECTOR
-            bool oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
-            _grid.at(index) &= ~(static_cast<uint64_t>(1) << bit);
-            return val != oldVal;
-            #endif
-
-            #ifdef USE_ARRAY
-            bool oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
-            _arrayGrid[index] &= ~(static_cast<uint64_t>(1) << bit);
-            return val != oldVal;
-            #endif
-
-            #ifdef USE_ARRAY_2D
             bool oldVal = _2DGrid[row][(_columns * offset) + column];
             _2DGrid[row][(_columns * offset) + column] = 0;
             return oldVal != val;
-            #endif
         }
     }
 
@@ -202,33 +129,11 @@ namespace util {
             return false;
         }
 
-        #if defined(USE_ARRAY) || defined(USE_VECTOR)
-        int location = getLocation(row, column, offset);
-        int index = getWord(location);
-        int bit = getBit(location);
-
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
-        cout << "data in main set location: " << location << " index: " << index << " bit: " << bit << endl;
-        #endif
-
-        #endif
-
 
         bool val, oldVal;
 
-        // TODO: Update oldVal to use previous offset in all cases
-        #ifdef USE_VECTOR
-        oldVal = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
-        #endif
-
-        #ifdef USE_ARRAY
-        oldVal = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
-        #endif
-
-        #ifdef USE_ARRAY_2D
         oldVal = _2DGrid[row][(_columns * previousOffset) + column];
 //        oldVal = _2DGrid[row][(column * (previousOffset+ 1)) + previousOffset]; // TODO: fix if changes go through
-        #endif
 
         val = evaluator(oldVal);
 
@@ -237,47 +142,13 @@ namespace util {
         #endif
 
         if (val) {
-            #ifdef USE_VECTOR
-            _grid.at(index) |= (static_cast<uint64_t>(1) << bit);
-            #endif
-
-            #ifdef USE_ARRAY
-            _arrayGrid[index] |= (static_cast<uint64_t>(1) << bit);
-            #endif
-
-            #ifdef USE_ARRAY_2D
             _2DGrid[row][(_columns * offset) + column] = 1;
 //            _2DGrid[row][(column * (offset+ 1)) + offset] = 1;
-            #endif
         }
         else {
-            #ifdef USE_VECTOR
-            _grid.at(index) &= ~(static_cast<uint64_t>(1) << bit);
-            #endif
-
-            #ifdef USE_ARRAY
-            _arrayGrid[index] &= ~(static_cast<uint64_t>(1) << bit);
-            #endif
-
-            #ifdef USE_ARRAY_2D
                 _2DGrid[row][(_columns * offset) + column] = 0;
 //                _2DGrid[row][(column * (offset+ 1)) + offset] = 0;
-            #endif
         }
-
-
-
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
-
-            #ifdef USE_VECTOR
-            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY
-            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
-            #endif
-
-        #endif
 
         return oldVal != val;
 
@@ -305,51 +176,14 @@ namespace util {
         cout << "in main get() row: " << row << " column: " << column << " offset: " << offset << endl;
         #endif
 
-        #if defined(USE_ARRAY) || defined(USE_VECTOR)
-        int location = getLocation(row, column, offset);
-        int index = getWord(location);
-        int bit = getBit(location);
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
-        cout << "data in main get - location: " << location << " index: " << index << " bit: " << bit << endl;
-        #endif
-
-        #endif
-
-
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
-            
-            #ifdef USE_VECTOR
-            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
-            cout << "raw byte after processing: " << std::bitset<64>((_grid.at(index) & (static_cast<uint64_t>(1) << bit))) << endl;
-            cout << "value after processing: " << (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY
-            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
-            cout << "raw byte after processing: " << std::bitset<64>((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit))) << endl;
-            cout << "value after processing: " << ((_arrayGrid[index]) & (static_cast<uint64_t>(1) << bit)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY_2D
-            cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
-            #endif
-
+        cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
         #endif
 
         bool val;
 
-        #ifdef USE_VECTOR
-        val = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
-        #endif
-
-        #ifdef USE_ARRAY
-        val = (_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1;
-        #endif
-
-        #ifdef USE_ARRAY_2D
         val = _2DGrid[row][(_columns * offset) + column] == 1;
-        #endif
 
         return val;
     }
@@ -365,9 +199,10 @@ namespace util {
 
         // create an infinite border of zeroes around the grid.
         if (row < -1 || row > _rows || column < -1 || column > _columns) {
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
+            #ifdef CELL_MATRIX_DEBUG_LOGGING
             cout << "Debug: Accessing out of range column for window returning zero." << endl;
-        #endif
+            #endif
+
             return 0;
         }
 
@@ -375,55 +210,13 @@ namespace util {
         cout << "in main get() row: " << row << " column: " << column << " offset: " << offset << endl;
         #endif
 
-        #if defined(USE_ARRAY) || defined(USE_VECTOR)
-        int location = getLocation(row, column, offset);
-        int index = getWord(location);
-        int bit = getBit(location);
 
         #ifdef CELL_MATRIX_DEBUG_LOGGING
-        cout << "data in main get - location: " << location << " index: " << index << " bit: " << bit << endl;
-        #endif
-
-        #endif
-
-
-        #ifdef CELL_MATRIX_DEBUG_LOGGING
-
-        #ifdef USE_VECTOR
-            cout << "raw byte: " << std::bitset<64>(_grid.at(index)) << endl;
-            cout << "raw byte after processing: " << std::bitset<64>((_grid.at(index) & (static_cast<uint64_t>(1) << bit))) << endl;
-            cout << "value after processing: " << (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY
-            cout << "raw byte: " << std::bitset<64>(_arrayGrid[index]) << endl;
-            cout << "raw byte after processing: " << std::bitset<64>((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit))) << endl;
-            cout << "value after processing: " << ((_arrayGrid[index]) & (static_cast<uint64_t>(1) << bit)) << endl;
-            #endif
-
-            #ifdef USE_ARRAY_2D
-            cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
-            #endif
-
+        cout << "raw byte: " << std::bitset<64>(_2DGrid[row][(_columns * offset) + column]) << endl;
         #endif
 
         int val;
 
-        #ifdef USE_VECTOR
-        val = (_grid.at(index) & (static_cast<uint64_t>(1) << bit)) >= 1;
-
-        val += index >= this->columns() ? ((_grid.at(index - this->columns()) & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
-        val += index < this->rows() * (this->_columns() - 1) - 1 ? ((_grid.at(index - this->columns()) & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
-        #endif
-
-        #ifdef USE_ARRAY
-        val = ((_arrayGrid[index] & (static_cast<uint64_t>(1) << bit)) >= 1);
-
-        val += index >= this->columns() ? ((_arrayGrid[index - this->columns()] & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
-        val += index < this->rows() * (this->_columns() - 1) - 1 ? ((_arrayGrid[index - this->columns()] & (static_cast<uint64_t>(1) << bit)) >= 1) : 0;
-        #endif
-
-        #ifdef USE_ARRAY_2D
         val = _2DGrid[row][(_columns * offset) + column];
 
         // TODO: make this much more efficient by removing if statements
@@ -435,7 +228,7 @@ namespace util {
 //
 //        val += row > 0 ? (_2DGrid[row - 1][(column * (offset+ 1)) + offset]) : 0;
 //        val += row < (this->rows() - 1) ? (_2DGrid[row + 1][(column * (offset+ 1)) + offset]) : 0;
-        #endif
+
 
         return val;
     }
@@ -470,4 +263,16 @@ namespace util {
         return msg.str();
     }
 
+    void CellMatrix::allocArray(const int rows, const int cols, const int maxOffset) {
+        _integerBlock = new uint8_t[rows * cols * (maxOffset + 1)];
+        _2DGrid = new uint8_t*[rows];
+
+        for (int i = 0; i < rows; i++)
+            _2DGrid[i] = &_integerBlock[i * cols * (maxOffset+ 1)];
+    }
+
+    void CellMatrix::deleteArray() {
+        delete[] _integerBlock;
+        delete[] _2DGrid;
+    }
 }
