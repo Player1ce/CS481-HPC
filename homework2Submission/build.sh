@@ -1,4 +1,4 @@
-cmake . -B auto-build
+cmake . -B -DCMAKE_BUILD_TYPE=Release auto-build
 
 cd auto-build || exit
 
