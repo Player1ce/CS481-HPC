@@ -5,5 +5,6 @@ add_library(Util
 )
 
 target_link_libraries(Util
-        PRIVATE Threads::Threads
+    PRIVATE Threads::Threads
+    PUBLIC OpenMP::OpenMP_CXX
 )

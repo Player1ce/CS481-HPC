@@ -37,6 +37,8 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
+    int numThreads = 10;
+
     if (argc < 3) {
         cout << "Using coded constants" << endl;
     }
@@ -51,6 +53,13 @@ int main(int argc, char** argv) {
         rows = atoi(argv[1]);
         columns = atoi(argv[2]);
         iterations = atoi(argv[3]);
+    }
+    else if (argc == 5) {
+        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << " and numThreads: " << argv[4] << endl;
+        rows = atoi(argv[1]);
+        columns = atoi(argv[2]);
+        iterations = atoi(argv[3]);
+        numThreads = atoi(argv[4]);
     }
 
     int printCount = max(iterations / 10, 1);
@@ -92,11 +101,15 @@ int main(int argc, char** argv) {
 
     start = chrono::system_clock::now();
 
+    bool updateOccurred = false;
+
     for (int i = 0; i < iterations; i++) {
 
 //        updateCells(matrix);
 
-        bool updateOccurred = updateCells_updateTracked(matrix);
+        updateOccurred = updateCells_UpdateTracked(matrix);
+
+        // updateOccurred = updateCells_UpdateTracked_OMP(matrix, numThreads);
 
         if (i == printCount * multiplier) {
             cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;

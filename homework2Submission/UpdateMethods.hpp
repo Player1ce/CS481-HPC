@@ -13,6 +13,8 @@
 #include <atomic>
 #include <iostream>
 
+#include <omp.h>
+
 
 //TODO: integrate a method into the CellMatrix that uses a single mutex to lock all writes to a certain offset of the matrix
 //  This will allow the update method to read the entire offset without acquiring any new locks even across multiple threads
@@ -124,7 +126,45 @@ inline void updateCells(util::CellMatrix &matrix) {
 //      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
 
-bool updateCells_updateTracked(util::CellMatrix &matrix) {
+bool updateCells_UpdateTracked(util::CellMatrix &matrix) {
+    // cout << "Update Started" << endl;
+
+    bool updateOccured = false;
+
+    const int nextOffset = matrix.getNextOffset();
+
+    // cout << "[";
+    // for (int i = 0; i < rowGroups.size(); i++) {
+    //     cout << "(" <<rowGroups.at(i).first << ", " << rowGroups.at(i).second << "), ";
+    // }
+    // cout << "]" << endl;
+
+    for (int row = 0; row < matrix.rows(); row++) {
+        for (int col = 0; col < matrix.columns(); col++) {
+            const bool update = getCellUpdate(matrix, row, col);
+            if (matrix.set(row, col, update, nextOffset)) {
+                updateOccured = true;
+            }
+            // cout << "i: " << i << ", j: " << j << endl;
+        }
+    }
+
+    // cout << "ThreadPool started" << endl;
+
+    // threadPool.enqueue([] {
+    //     this_thread::sleep_for(chrono::seconds(10));
+    //     cout << "Thread ID: " << this_thread::get_id() << endl;
+    // });
+
+    // cout << "ThreadPool stopped" << endl;
+
+    matrix.incrementOffset();
+    return updateOccured;
+}
+
+
+
+bool updateCells_UpdateTracked_OMP(util::CellMatrix &matrix, int numThreads) {
     // cout << "Update Started" << endl;
 
     std::atomic<bool> updateOccured = false;
@@ -138,6 +178,7 @@ bool updateCells_updateTracked(util::CellMatrix &matrix) {
     // cout << "]" << endl;
     bool updateStored = false;
 
+    #pragma omp parallel for num_threads(numThreads)
     for (int row = 0; row < matrix.rows(); row++) {
         for (int col = 0; col < matrix.columns(); col++) {
             const bool update = getCellUpdate(matrix, row, col);
