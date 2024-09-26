@@ -1,0 +1,66 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_1000-100.sh
+  The time limit is 4:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework2Submission
+  The working directory is:  /scratch-local/ualclsd0201.test1000100shSCRIP.109503.asax-pbs1
+  The memory limit is: 500mb
+  The job will start running after: 202409252352.09
+  Job Name: test1000100shSCRIP
+  Queue: -q express
+  Constraints: 
+  Using  1  cores on master node  asaxg005.asc.edu
+  Node list:  asaxg005.asc.edu
+  Cores:  1
+  Command typed:
+/scripts/run_script test_1000-100.sh     
+  Queue submit command:
+qsub -q express -j oe -N test1000100shSCRIP -a 202409252352.09 -r n -M mtorres3@crimson.ua.edu -l walltime=4:00:00 -l select=ncpus=1:mem=500mb 
+Using size: 1000 and iterations: 100
+constructor complete
+fill with random complete
+sum complete
+On iteration: 10 , 10%
+On iteration: 20 , 20%
+On iteration: 30 , 30%
+On iteration: 40 , 40%
+On iteration: 50 , 50%
+On iteration: 60 , 60%
+On iteration: 70 , 70%
+On iteration: 80 , 80%
+On iteration: 90 , 90%
+System took: 4.348 seconds to run
+percent: 50.0234%
+Using size: 1000 and iterations: 100
+constructor complete
+fill with random complete
+sum complete
+On iteration: 10 , 10%
+On iteration: 20 , 20%
+On iteration: 30 , 30%
+On iteration: 40 , 40%
+On iteration: 50 , 50%
+On iteration: 60 , 60%
+On iteration: 70 , 70%
+On iteration: 80 , 80%
+On iteration: 90 , 90%
+System took: 4.330 seconds to run
+percent: 50.052%
+Using size: 1000 and iterations: 100
+constructor complete
+fill with random complete
+sum complete
+On iteration: 10 , 10%
+On iteration: 20 , 20%
+On iteration: 30 , 30%
+On iteration: 40 , 40%
+On iteration: 50 , 50%
+On iteration: 60 , 60%
+On iteration: 70 , 70%
+On iteration: 80 , 80%
+On iteration: 90 , 90%
+System took: 4.150 seconds to run
+percent: 49.9535%

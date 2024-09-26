@@ -2,3 +2,5 @@
 .vscode/*
 */make/*
 build/*
+homework2Submission/auto-build*
+homework2Submission/build/*

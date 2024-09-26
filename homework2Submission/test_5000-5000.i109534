@@ -1,0 +1,18 @@
+ 
+============================================================
+=====     Queued job information at submit time        =====
+============================================================
+  The submitted file is: test_5000-5000.sh
+  The time limit is 06:20:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework2Submission
+  The memory limit is: 300mb
+  The job will start running after: 202409260041.37
+  Job Name: test_5000-5000
+  Queue: -q small
+  Constraints: 
+  Command typed:
+/scripts/run_script test_5000-5000.sh     
+  Queue submit command:
+qsub -q small -j oe -N test_5000-5000 -a 202409260041.37 -r n -M mtorres3@crimson.ua.edu -l walltime=06:20:00 -l select=ncpus=1:mem=300mb 
+  Job number: 109534
+ 
