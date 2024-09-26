@@ -22,28 +22,6 @@ namespace util {
         LibraryCode::deleteArray(_2DGrid);
     }
 
-    int CellMatrix::getLocation(const int row, const int column, const int offset) const {
-        return ((row * _columns + column) * (_maxOffset + 1)) + offset;
-    }
-
-    int CellMatrix::getWord(const int row, const int column, const int offset) const {
-        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
-        return location / 64;
-    }
-
-    int CellMatrix::getWord(const int location) {
-        return location / 64;
-    }
-
-    int CellMatrix::getBit(const int row, const int column, const int offset) const {
-        int location = ((row * _columns + column) * (_maxOffset + 1)) + offset;
-        return location % 64;
-    }
-
-    int CellMatrix::getBit(const int location) {
-        return location % 64;
-    }
-
     bool CellMatrix::set(const int row, const int column, const bool val) {
         return set(row, column, val, getOffset());
     }
