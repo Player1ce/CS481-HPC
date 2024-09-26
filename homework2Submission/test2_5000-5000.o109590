@@ -1,0 +1,36 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_5000-5000.sh
+  The time limit is 02:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework2Submission
+  The working directory is:  /scratch-local/ualclsd0201.test2_5000-5000.109590.asax-pbs1
+  The memory limit is: 1gb
+  The job will start running after: 202409260351.25
+  Job Name: test2_5000-5000
+  Queue: -q small
+  Constraints: 
+  Using  1  cores on master node  asaxg005.asc.edu
+  Node list:  asaxg005.asc.edu
+  Cores:  1
+  Command typed:
+/scripts/run_script test_5000-5000.sh     
+  Queue submit command:
+qsub -q small -j oe -N test2_5000-5000 -a 202409260351.25 -r n -M mtorres3@crimson.ua.edu -l walltime=02:00:00 -l select=ncpus=1:mem=1000mb 
+Using size: 5000 and iterations: 5000
+constructor complete
+fill with random complete
+sum complete
+On iteration: 500 , 10%
+On iteration: 1000 , 20%
+On iteration: 1500 , 30%
+On iteration: 2000 , 40%
+On iteration: 2500 , 50%
+On iteration: 3000 , 60%
+On iteration: 3500 , 70%
+On iteration: 4000 , 80%
+On iteration: 4500 , 90%
+System took: 4020.960 seconds to run
+percent: 49.9973%

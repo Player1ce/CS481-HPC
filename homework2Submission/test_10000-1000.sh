@@ -12,5 +12,5 @@ module load intel
 # time: 5:30:00
 
 ./Homework2 10000 1000
-./Homework2 10000 1000
-./Homework2 10000 1000
+#./Homework2 10000 1000
+#./Homework2 10000 1000
