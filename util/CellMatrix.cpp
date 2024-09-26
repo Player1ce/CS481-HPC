@@ -9,13 +9,9 @@ using namespace std;
 namespace util {
 
     CellMatrix::CellMatrix(const int rows, const int columns, const int maxOffset)
-            : _rows(rows),
-              _columns(columns),
-              _maxOffset(maxOffset),
-              _offset(0),
-              _nextOffset(calculateNextOffset())
+            : ICellMatrix(rows, columns, maxOffset, 1)
     {
-        allocArray(rows, columns, _maxOffset);
+        _2DGrid = LibraryCode::allocateArray(rows, columns * (_maxOffset + 1));
     }
 
     CellMatrix::CellMatrix(const int size, const int maxOffset)
@@ -23,33 +19,7 @@ namespace util {
     {}
 
     CellMatrix::~CellMatrix() {
-        deleteArray();
-    }
-
-    void CellMatrix::fillWithRandom(const int min, const int max)
-    {
-        // Create a random number generator
-        std::random_device seed;
-        std::mt19937 generator(seed());
-
-        // Create a distribution for your desired range
-        std::uniform_int_distribution<int> distribution(min, max);
-
-        #ifdef CELL_MATRIX_DEGUB_LOGGING
-            cout << "RNG created, filling matrix with numbers." << endl;
-        #endif
-
-        for (int i = 0; i < this->rows(); i++) {
-            for (int j = 0; j < this->columns(); j++)
-                this->set(i, j, distribution(generator));
-        }
-    }
-
-    void CellMatrix::fillFromVector(const vector<bool> & list) {
-        for (int i = 0; i < this->rows(); i++) {
-            for (int j = 0; j < this->columns(); j++)
-                this->set(i, j, list.at(this->columns() * i + j));
-        }
+        LibraryCode::deleteArray(_2DGrid);
     }
 
     int CellMatrix::getLocation(const int row, const int column, const int offset) const {
@@ -61,7 +31,7 @@ namespace util {
         return location / 64;
     }
 
-    int CellMatrix::getWord(const int location) const {
+    int CellMatrix::getWord(const int location) {
         return location / 64;
     }
 
@@ -70,7 +40,7 @@ namespace util {
         return location % 64;
     }
 
-    int CellMatrix::getBit(const int location) const {
+    int CellMatrix::getBit(const int location) {
         return location % 64;
     }
 
@@ -188,8 +158,8 @@ namespace util {
         return val;
     }
 
-    [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int col) const {
-        return getVerticalWindow(row, col, getOffset());
+    [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int column) const {
+        return getVerticalWindow(row, column, getOffset());
     }
 
     [[nodiscard]] int CellMatrix::getVerticalWindow(const int row, const int column, const int offset) const {
@@ -231,48 +201,5 @@ namespace util {
 
 
         return val;
-    }
-
-    int CellMatrix::incrementOffset() {
-        _offset = getNextOffset();
-        _nextOffset = calculateNextOffset();
-        return _offset;
-    }
-
-    int CellMatrix::getSum() const {
-        int sum = 0;
-        for (int i = 0; i < this->rows(); i++) {
-            for (int j = 0; j < this->columns(); j++) {
-                sum += this->get(i, j);
-            }
-        }
-        return sum;
-    }
-
-    std::string CellMatrix::toString() const {
-        std::stringstream msg("");
-        msg << "[" << endl;
-        for (int i = 0; i < this->rows(); i++) {
-            msg << "[ ";
-            for (int j = 0; j < this->columns(); j++) {
-                msg << this->get(i, j) << " ";
-            }
-            msg << "]" << endl;
-        }
-        msg << "]" << endl;
-        return msg.str();
-    }
-
-    void CellMatrix::allocArray(const int rows, const int cols, const int maxOffset) {
-        _integerBlock = new uint8_t[rows * cols * (maxOffset + 1)];
-        _2DGrid = new uint8_t*[rows];
-
-        for (int i = 0; i < rows; i++)
-            _2DGrid[i] = &_integerBlock[i * cols * (maxOffset+ 1)];
-    }
-
-    void CellMatrix::deleteArray() {
-        delete[] _integerBlock;
-        delete[] _2DGrid;
     }
 }

@@ -7,10 +7,14 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include <random>
 #include <memory>
 #include <bitset>
 #include <functional>
+
+#include "LibraryCode.hpp"
+#include "ICellMatrix.hpp"
 
 //#define CELL_MATRIX_DEBUG_LOGGING
 
@@ -18,90 +22,32 @@
 
 namespace util {
     // row major
-    class CellMatrix {
+    class CellMatrix : public ICellMatrix {
     public:
         CellMatrix(int rows, int columns, int maxOffset = 1);
 
         explicit CellMatrix(int size, int maxOffset = 1);
 
-        ~CellMatrix();
+        ~CellMatrix() override;
 
-        void fillWithRandom(int min= 0, int max = 1);
+        bool set(int row, int column, bool val) override;
 
-        void fillFromVector(const std::vector<bool>& list);
-
-        [[nodiscard]] inline int getLocation(int row, int column, int offset) const;
-
-        [[nodiscard]] inline int getWord(int row, int column, int offset) const;
-
-        [[nodiscard]] inline int getWord(int location) const;
-
-        [[nodiscard]] inline int getBit(int row, int column, int offset) const;
-
-        [[nodiscard]] inline int getBit(int location) const;
-
-        [[nodiscard]] inline bool isSquare() const {
-            return _rows == _columns;
-        }
-
-        [[nodiscard]] inline int rows() const {
-            return _rows;
-        }
-
-        [[nodiscard]] inline int columns() const {
-            return _columns;
-        }
-
-        bool set(int row, int column, bool val);
-
-        bool set(int row, int column, bool val, int offset);
+        bool set(int row, int column, bool val, int offset) override;
 
         bool integratedSet(int row, int column, std::function<bool(bool)> evaluator, int previousOffset);
 
         bool integratedSet(int row, int column, std::function<bool(bool)> evaluator, int previousOffset, int offset);
 
-        [[nodiscard]] bool get(int row, int column) const;
+        [[nodiscard]] bool get(int row, int column) const override;
 
-        [[nodiscard]] bool get(int row, int column, int offset) const;
+        [[nodiscard]] bool get(int row, int column, int offset) const override;
 
-        [[nodiscard]] int getVerticalWindow(int row, int col) const;
+        [[nodiscard]] int getVerticalWindow(int row, int column) const override;
 
-        [[nodiscard]] int getVerticalWindow(int row, int column, int offset) const;
-
-        [[nodiscard]] inline int getOffset() const {
-            return _offset;
-        }
-
-        [[nodiscard]] inline int getNextOffset() const {
-            return _nextOffset;
-        }
-
-        int incrementOffset(); // NOLINT(*-use-nodiscard)
-
-        [[nodiscard]] int getSum() const;
-
-        [[nodiscard]] std::string toString() const;
-
-        friend std::ostream& operator<<(std::ostream& os, const CellMatrix& obj) {
-            os << obj.toString();
-            return os;
-        }
+        [[nodiscard]] int getVerticalWindow(int row, int column, int offset) const override;
 
     private:
-
-        [[nodiscard]] inline int calculateNextOffset() const {
-            return (_offset + 1) % (_maxOffset + 1);
-        }
-
-        void allocArray(int rows, int cols, int maxOffset);
-
-        void deleteArray();
-
-        uint8_t* _integerBlock;
         uint8_t** _2DGrid;
-
-        int _rows, _columns;
-        int _maxOffset = 1, _offset = 0, _nextOffset = 1;
     };
 }
 
