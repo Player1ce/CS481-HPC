@@ -5,6 +5,7 @@
 #ifndef CS481_HPC_UPDATEMETHODS_HPP
 #define CS481_HPC_UPDATEMETHODS_HPP
 
+#include "../util/ICellMatrix.hpp"
 #include "../util/CellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
 #include "../util/FixedSizeQueue.hpp"
@@ -24,7 +25,7 @@
 
 //TODO: solution to mutex problem. Treat all bits on the edge of a range as shared and use atomic_ref to access and edit them.
 //      Should be faster than a mutex and equivalently safe. Do calculations to figure out what range is in danger
-inline bool updateCellsRowOptimized(util::CellMatrix matrix,
+inline bool updateCellsRowOptimized(util::ICellMatrix &matrix,
                                     int rowStart, int rowEnd, int colStart, int colEnd) {
     std::vector<int> currentCol;
     std::vector<int> nextCol;
@@ -76,7 +77,7 @@ inline bool updateCellsRowOptimized(util::CellMatrix matrix,
 }
 
 
-inline bool getCellUpdate(util::CellMatrix &grid, int row, int column, int neighborsAlive) {
+inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column, int neighborsAlive) {
     #ifdef CELL_UPDATE_DEBUG_LOGGING
     std::cout <<" | val: " << neighborsAlive << " ";
     #endif
@@ -133,7 +134,7 @@ inline bool getCellUpdateSubtractingState(int neighborsAlive, const bool cellAli
 }
 
 
-inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
+inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column) {
     int neighborsAlive = 0;
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
@@ -191,7 +192,7 @@ inline bool getCellUpdate(util::CellMatrix &grid, int row, int column) {
     }
 }
 
-inline bool updateCells(util::CellMatrix &matrix) {
+inline bool updateCells(util::ICellMatrix &matrix) {
     bool update = false;
 
     const int nextOffset = matrix.getNextOffset();
@@ -210,7 +211,7 @@ inline bool updateCells(util::CellMatrix &matrix) {
 //      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
 
 
-bool updateCells_Windows(util::CellMatrix &matrix) {
+bool updateCells_Windows(util::ICellMatrix &matrix) {
     // std::cout << "Update Started" << std::endl;
 
     bool updateOccurred = false;
@@ -296,7 +297,7 @@ bool updateCells_Windows(util::CellMatrix &matrix) {
     return updateOccurred;
 }
 
-bool updateCellsUsingThreadPool_Windows(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
+bool updateCellsUsingThreadPool_Windows(util::ICellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
     // std::cout << "Update Started" << std::endl;
 
     std::atomic<bool> updateOccurred = false;
@@ -394,7 +395,7 @@ bool updateCellsUsingThreadPool_Windows(util::CellMatrix &matrix, util::ThreadPo
     return updateOccurred;
 }
 
-std::vector<std::pair<int, int>> calculateRowGroups(util::CellMatrix &matrix, int numGroups) {
+std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, int numGroups) {
 
     if (numGroups < 0) {
         numGroups = 1;
@@ -427,7 +428,7 @@ std::vector<std::pair<int, int>> calculateRowGroups(util::CellMatrix &matrix, in
 }
 
 
-bool updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
+bool updateCellsUsingThreadPool(util::ICellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
     // std::cout << "Update Started" << std::endl;
 
     // std::cout << "[";
@@ -485,7 +486,7 @@ bool updateCellsUsingThreadPool(util::CellMatrix &matrix, util::ThreadPool &thre
 }
 
 
-bool updateCellsUsingThreadPool_Windows_Optimized(util::CellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
+bool updateCellsUsingThreadPool_Windows_Optimized(util::ICellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
     // std::cout << "Update Started" << std::endl;
 
     std::atomic<bool> updateOccurred = false;

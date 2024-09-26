@@ -9,8 +9,8 @@ namespace util {
     MultiArrayCellMatrix::MultiArrayCellMatrix(const int rows, const int columns, const int numArrays, const int border)
             : ICellMatrix(rows, columns, numArrays, 1)
     {
-        _arrays = new uint8_t**[_maxOffset];
-        for (int i = 0; i < numArrays; i++) {
+        _arrays = new uint8_t**[numArrays+1];
+        for (int i = 0; i < numArrays + 1; i++) {
             _arrays[i] = LibraryCode::allocateArray(rows + (2 * border), columns + (2 * border));
 
             // Create teh border

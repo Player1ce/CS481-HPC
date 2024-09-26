@@ -14,7 +14,9 @@ Instructions to run the program: (for example: ./hw1 <size> <iterations>)
 #include <atomic>
 #include <shared_mutex>
 
+#include "../util/ICellMatrix.hpp"
 #include "../util/CellMatrix.hpp"
+#include "../util/MultiArrayCellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
 
 #include "UpdateMethods.hpp"
@@ -66,7 +68,8 @@ int main(int argc, char** argv) {
 
     chrono::time_point<chrono::system_clock> start, end;
 
-    CellMatrix matrix = CellMatrix(rows, columns, maxOffset);
+//    ICellMatrix matrix = CellMatrix(rows, columns, maxOffset);
+    MultiArrayCellMatrix matrix = MultiArrayCellMatrix(rows, columns, maxOffset);
 
     #ifdef DEBUG_LOGGING
     cout << "constructor complete" << endl;

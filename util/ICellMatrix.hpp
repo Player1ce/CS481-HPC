@@ -39,6 +39,11 @@ namespace util {
 
         virtual bool set(int row, int column, bool val, int offset) = 0;
 
+        virtual bool set_withCheck(int row, int column, bool val,
+                                   int oldOffset, int newOffset) = 0;
+
+        virtual bool set_withCheck(int row, int column, bool val) = 0;
+
         [[nodiscard]] virtual bool get(int row, int column) const = 0;
 
         [[nodiscard]] virtual bool get(int row, int column, int offset) const = 0;

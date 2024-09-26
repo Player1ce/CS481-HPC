@@ -10,27 +10,39 @@
 
 namespace util {
 
-    class MultiArrayCellMatrix : ICellMatrix {
+    class MultiArrayCellMatrix : public ICellMatrix {
     public:
 
-        MultiArrayCellMatrix(int rows, int columns, int numArrays, const int border = 1);
+        MultiArrayCellMatrix(int rows, int columns, int numArrays, int border = 1);
 
         ~MultiArrayCellMatrix() override;
 
         bool inline set(const int row, const int column, bool val, const int offset) override {
             _arrays[offset][row + 1][column + 1] = val;
-            return false;
+            return true;
         }
 
-        bool inline set(const int row, const int column, bool val) override {
+        bool inline set(const int row, const int column, const bool val) override {
             return set(row, column, val, this->getOffset());
+        }
+
+        bool inline set_withCheck(const int row, const int column, const bool val,
+                                  const int oldOffset, const int newOffset) override
+        {
+            uint8_t oldVal = _arrays[oldOffset][row + 1][column + 1];
+            _arrays[newOffset][row + 1][column + 1] = val;
+            return oldVal != val;
+        }
+
+        bool inline set_withCheck(const int row, const int column, const bool val) override {
+            return set_withCheck(row, column, val, this->getOffset(), this->getOffset());
         }
 
         [[nodiscard]] bool inline get(const int row, const int column, const int offset) const override {
             return _arrays[offset][row + 1][column + 1];
         }
 
-        [[nodiscard]] bool inline get(const int row, const int column) const override{
+        [[nodiscard]] bool inline get(const int row, const int column) const override {
             return get(row, column, this->getOffset());
         }
 
