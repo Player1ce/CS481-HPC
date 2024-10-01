@@ -83,14 +83,8 @@ inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column, int neig
     #endif
 
     switch (neighborsAlive) {
-        case (-1):
-        case (0):
-        case (1):
-            return false;
-            break;
-
         case(2):
-            return grid.get(row, column) == 1;;
+            return grid.get(row, column);
             break;
 
         case(3):
@@ -106,19 +100,15 @@ inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column, int neig
 
 inline bool getCellUpdateSubtractingState(int neighborsAlive, const bool cellAlive) {
 
-    neighborsAlive -= (cellAlive ? 1 : 0);
+    if (cellAlive) {
+        neighborsAlive--;
+    }
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
     std::cout <<" | val: " << neighborsAlive << " ";
     #endif
 
     switch (neighborsAlive) {
-        case (-1):
-        case (0):
-        case (1):
-            return false;
-            break;
-
         case(2):
             return cellAlive;
             break;
@@ -141,28 +131,33 @@ inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column) {
     std::cout << "[" << std::endl;
     #endif
 
-    for (int i = -1; i <= 1; i++) {
-    #ifdef CELL_UPDATE_DEBUG_LOGGING
-        std::cout << "[";
-    #endif
+//    for (int i = -1; i <= 1; i++) {
+//    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//        std::cout << "[";
+//    #endif
+//
+//        for (int j = -1; j <=1; j++) {
+//    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//            std::cout << " " << grid.get(row + i, column + j);
+//    #endif
+//            if (i != 0 || j != 0) {
+//                neighborsAlive += grid.get(row + i, column + j);
+//            }
+//        }
+//    #ifdef CELL_UPDATE_DEBUG_LOGGING
+//        std::cout << "]" << std::endl;
+//    #endif
+//
+//        if (neighborsAlive >= 4) {
+//            break;
+//        }
+//    }
 
-        for (int j = -1; j <=1; j++) {
-    #ifdef CELL_UPDATE_DEBUG_LOGGING
-            std::cout << " " << grid.get(row + i, column + j);
-    #endif
-            if (i != 0 || j != 0) {
-                neighborsAlive += grid.get(row + i, column + j);
-            }
-        }
 
-    #ifdef CELL_UPDATE_DEBUG_LOGGING
-        std::cout << "]" << std::endl;
-    #endif
+    neighborsAlive = grid.get(row-1, column-1) + grid.get(row-1, column) + grid.get(row-1, column+1)
+                     + grid.get(row, column-1) + grid.get(row, column+1)
+                     + grid.get(row+1, column-1) + grid.get(row+1, column) + grid.get(row+1, column+1);
 
-        if (neighborsAlive >= 4) {
-            break;
-        }
-    }
 
     #ifdef CELL_UPDATE_DEBUG_LOGGING
     std::cout << "]" << std::endl;
@@ -172,14 +167,8 @@ inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column) {
     #endif
 
     switch (neighborsAlive) {
-        case (-1):
-        case (0):
-        case (1):
-            return false;
-            break;
-
         case(2):
-            return grid.get(row, column) == 1;
+            return grid.get(row, column);
             break;
 
         case(3):

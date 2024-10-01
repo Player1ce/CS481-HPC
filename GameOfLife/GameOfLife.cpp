@@ -131,10 +131,12 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < iterations; i++) {
 
+        // 4.9, 4.9
 //        updateOccurred = updateCells(matrix);
 
 //        updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
 
+        // 6.7, 6.6
         updateOccurred = updateCells_Windows(matrix);
 
         // updateOccurred = updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);

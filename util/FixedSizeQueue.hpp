@@ -24,32 +24,27 @@ namespace util {
         {}
 
         void resetQueue() {
-            while (!this->empty()) {
-                this->pop();
+            tail = head = 0;
+            isFull = false;
+            if (_useRunningSum) {
+                _runningSum = T();
             }
         }
 
         void push(const T& value) {
-            if (_useRunningSum && isFull) {
-                _runningSum += value - data[tail];
-            }
-            else if (_useRunningSum) {
-                _runningSum += value;
+            if (_useRunningSum) {
+                _runningSum += value - (isFull ? data[tail] : T());
             }
 
             data[head] = value;
+            head = (head + 1) % Size;
 
             if (isFull) {
 
                 tail = (tail + 1) % Size;
+            } else if (head == tail) {
+                isFull = true;
             }
-
-            head = (head + 1) % Size;
-            isFull = tail == head;
-        }
-
-        [[nodiscard]] T front() const {
-            return data[tail];
         }
 
         void pop() {
@@ -68,30 +63,31 @@ namespace util {
             return (!isFull && (tail == head));
         }
 
+        T front() const {
+            if (empty()) {
+                return T();
+            }
+            return data[tail];
+        }
+
         [[nodiscard]] bool full() const {
             return isFull;
         }
 
         T sum() const {
             if (empty()) {
-                return T(); // Return default-constructed T (usually 0 for numeric types)
+                return T();
             }
-            else if (_useRunningSum) {
+            if (_useRunningSum) {
                 return _runningSum;
             }
-            else {
-                if (isFull) {
-                    return std::accumulate(data.begin(), data.end(), T());
-                }
-
-                if (head > tail) {
-                    return std::accumulate(data.begin() + tail, data.begin() + head, T());
-                } else {
-                    T sum = std::accumulate(data.begin() + tail, data.end(), T());
-                    sum += std::accumulate(data.begin(), data.begin() + head, T());
-                    return sum;
-                }
+            if (isFull) {
+                return std::accumulate(data.begin(), data.end(), T());
             }
+            if (head > tail) {
+                return std::accumulate(data.begin() + tail, data.begin() + head, T());
+            }
+            return std::accumulate(data.begin() + tail, data.end(), T()) + std::accumulate(data.begin(), data.begin() + head, T());
         }
 
     private:
