@@ -118,14 +118,14 @@ int main(int argc, char **argv) {
     std::random_device seed;
     std::mt19937 generator(seed());
 
-    // Create a distribution for your desired range
+    // Create a distribution for the desired range
     std::uniform_int_distribution<int> distribution(0, 1);
 
     /* Initialize the life matrix */
     for (i = 1; i < N+1; i++) {
 //        srand(54321|i);
         for (j = 1; j< N+1; j++)
-            if (distribution(generator) < 0.5)
+            if (distribution(generator) > 0.5)
                 life[i][j] = ALIVE ;
             else
                 life[i][j] = DIES ;

@@ -15,7 +15,7 @@ Instructions to run the program: (for example: ./hw1 <size> <iterations>)
 #include <shared_mutex>
 
 #include "../util/ICellMatrix.hpp"
-#include "../util/CellMatrix.hpp"
+//#include "../util/CellMatrix.hpp"
 #include "../util/MultiArrayCellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
 
@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
 
 //    ICellMatrix matrix = CellMatrix(rows, columns, maxOffset);
     MultiArrayCellMatrix matrix = MultiArrayCellMatrix(rows, columns, maxOffset);
+    MultiArrayCellMatrix storage = MultiArrayCellMatrix(rows, columns, 0);
 
     #ifdef DEBUG_LOGGING
     cout << "constructor complete" << endl;
@@ -123,33 +124,39 @@ int main(int argc, char** argv) {
 
     int multiplier = 1;
 
+    bool updateOccurred = true;
+
     start = chrono::system_clock::now();
 
-    bool updateOccurred = false;
-
-    auto groups = calculateRowGroups(matrix, numThreads);
+//    auto groups = calculateRowGroups(matrix, numThreads);
 
     for (int i = 0; i < iterations; i++) {
+        // times for 1000x1000
+        // goal: 2.6
 
-        // 4.9, 4.9
+        // 5.2
 //        updateOccurred = updateCells(matrix);
 
-//        updateOccurred = updateCellsUsingThreadPool(matrix, threadPool, groups);
+        // 4.9
+        updateCells_noCheck(matrix);
 
-        // 6.7, 6.6
-        updateOccurred = updateCells_Windows(matrix);
+//        updateCellsUsingThreadPool(matrix, threadPool, groups);
 
-        // updateOccurred = updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);
+        // 5.2
+//        updateCells_Windows(matrix);
 
-        if (i == printCount * multiplier) {
-            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
-              multiplier++;
-        }
 
-        if (!updateOccurred) {
-            cout << "exiting early because no update" << endl;
-            break;
-        }
+        // updateCellsUsingThreadPool_Windows(matrix, threadPool, groups);
+
+//        if (i == printCount * multiplier) {
+//            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
+//              multiplier++;
+//        }
+//
+//        if (!updateOccurred) {
+//            cout << "exiting early because no update" << endl;
+//            break;
+//        }
     }
 
     end = chrono::system_clock::now();

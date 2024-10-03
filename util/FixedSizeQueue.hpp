@@ -18,41 +18,33 @@ namespace util {
         static_assert(std::is_same_v<decltype(std::declval<T>() + std::declval<T>()), T>,
                       "Type T must support the + operator");
 
-        explicit FixedSizeQueue(const bool useRunningSum = false)
-            : _useRunningSum(useRunningSum),
-            _runningSum()
+        explicit FixedSizeQueue()
+            : _runningSum()
         {}
 
         void resetQueue() {
             tail = head = 0;
             isFull = false;
-            if (_useRunningSum) {
-                _runningSum = T();
-            }
+            _runningSum = T();
         }
 
         void push(const T& value) {
-            if (_useRunningSum) {
-                _runningSum += value - (isFull ? data[tail] : T());
-            }
+            _runningSum += value - (isFull ? data[tail] : T());
 
             data[head] = value;
             head = (head + 1) % Size;
 
             if (isFull) {
-
                 tail = (tail + 1) % Size;
-            } else if (head == tail) {
-                isFull = true;
+            } else {
+                isFull = head == tail;
             }
         }
 
         void pop() {
             if (!empty()) {
 
-                if (_useRunningSum) {
-                    _runningSum -= data[tail];
-                }
+                _runningSum -= data[tail];
 
                 tail = (tail + 1) % Size;
                 isFull = false;
@@ -78,9 +70,10 @@ namespace util {
             if (empty()) {
                 return T();
             }
-            if (_useRunningSum) {
+            else {
                 return _runningSum;
             }
+
             if (isFull) {
                 return std::accumulate(data.begin(), data.end(), T());
             }
@@ -92,7 +85,6 @@ namespace util {
 
     private:
         std::array<T, Size> data;
-        bool _useRunningSum;
         T _runningSum;
         std::size_t tail = 0;
         std::size_t head = 0;

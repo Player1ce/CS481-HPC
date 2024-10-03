@@ -5,8 +5,8 @@
 #ifndef CS481_HPC_UPDATEMETHODS_HPP
 #define CS481_HPC_UPDATEMETHODS_HPP
 
-#include "../util/CellMatrix.hpp"
-#include "../util/ThreadPool.hpp"
+#include "CellMatrix.hpp"
+#include "ThreadPool.hpp"
 
 #include <mutex>
 #include <vector>

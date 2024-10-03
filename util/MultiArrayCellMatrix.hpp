@@ -5,7 +5,7 @@
 #ifndef CS481_HPC_MULTIARRAYCELLMATRIX_HPP
 #define CS481_HPC_MULTIARRAYCELLMATRIX_HPP
 
-#include "CellMatrix.hpp"
+#include "ICellMatrix.hpp"
 #include "LibraryCode.hpp"
 
 namespace util {
@@ -17,20 +17,27 @@ namespace util {
 
         ~MultiArrayCellMatrix() override;
 
-        bool inline set(const int row, const int column, bool val, const int offset) override {
+        void inline set(const int row, const int column, const uint8_t val, const int offset) override {
             _arrays[offset][row + 1][column + 1] = val;
-            return true;
         }
 
-        bool inline set(const int row, const int column, const bool val) override {
-            return set(row, column, val, this->getOffset());
+        void inline set(const int row, const int column, const uint8_t val) override {
+            set(row, column, val, this->getOffset());
+        }
+
+        void inline add(const int row, const int column, const uint8_t val, const int offset) override {
+            _arrays[offset][row + 1][column + 1] += val;
+        }
+
+        void inline add(const int row, const int column, const uint8_t val) override {
+            set(row, column, val, this->getOffset());
         }
 
         bool inline set_withCheck(const int row, const int column, const bool val,
-                                  const int oldOffset, const int newOffset) override
+                                  const int setOffset, const int testOffset) override
         {
-            uint8_t oldVal = _arrays[oldOffset][row + 1][column + 1];
-            _arrays[newOffset][row + 1][column + 1] = val;
+            uint8_t oldVal = _arrays[testOffset][row + 1][column + 1];
+            _arrays[setOffset][row + 1][column + 1] = val;
             return oldVal != val;
         }
 

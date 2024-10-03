@@ -35,9 +35,13 @@ namespace util {
             return _columns;
         }
 
-        virtual bool set(int row, int column, bool val) = 0;
+        virtual void set(int row, int column, uint8_t val) = 0;
 
-        virtual bool set(int row, int column, bool val, int offset) = 0;
+        virtual void set(int row, int column, uint8_t val, int offset) = 0;
+
+        virtual void add(int row, int column, uint8_t val) = 0;
+
+        virtual void add(int row, int column, uint8_t val, int offset) = 0;
 
         virtual bool set_withCheck(int row, int column, bool val,
                                    int oldOffset, int newOffset) = 0;
