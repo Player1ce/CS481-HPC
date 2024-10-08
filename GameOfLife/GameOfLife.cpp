@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
     int iterations = 1000;
 
-    constexpr bool useInitializerList = false;
+    bool useInitializerList = false;
 
     constexpr int maxOffset = 1;
 
@@ -41,8 +41,14 @@ int main(int argc, char** argv) {
 
     int numThreads = 10;
 
-    if (argc < 3) {
+    if (argc < 2) {
         cout << "Using coded constants" << endl;
+    }
+    else if (argc == 2) {
+        cout << "Using Vector initializer" << endl;
+        useInitializerList = true;
+        rows = columns = 5;
+        iterations = 1;
     }
     else if (argc == 3) {
         cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << endl;
@@ -63,6 +69,11 @@ int main(int argc, char** argv) {
         iterations = atoi(argv[3]);
         numThreads = atoi(argv[4]);
     }
+
+    if (rows == 5 && columns == 5) {
+        cout << "size is 5 but iterations is not 1 so initializer list will not be used";
+    }
+
 
     int printCount = max(iterations / 10, 1);
 

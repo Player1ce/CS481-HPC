@@ -4,6 +4,7 @@
 
 #include "../util/ICellMatrix.hpp"
 #include "../util/MultiArrayCellMatrix.hpp"
+#include "../util/FixedSizeQueue.hpp"
 
 using namespace std;
 using namespace util;
@@ -24,8 +25,14 @@ int main(int argc, char** argv) {
 
     int numThreads = 10;
 
-    if (argc < 3) {
+    if (argc < 2) {
         cout << "Using coded constants" << endl;
+    }
+    else if (argc == 2) {
+        cout << "Using Vector initializer" << endl;
+        useInitializerList = true;
+        rows = columns = 5;
+        iterations = 1;
     }
     else if (argc == 3) {
         cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << endl;
@@ -47,10 +54,8 @@ int main(int argc, char** argv) {
         numThreads = atoi(argv[4]);
     }
 
-    if (rows == 5 && columns == 5 && iterations == 1) {
-        useInitializerList = true;
-    }
-    else if (rows == 5 && columns == 5) {
+
+    if (rows == 5 && columns == 5) {
         cout << "size is 5 but iterations is not 1 so initializer list will not be used";
     }
 
@@ -65,10 +70,10 @@ int main(int argc, char** argv) {
     int numArrays = 2;
     int border = 1;
 
-    uint8_t*** _arrays = new uint8_t**[numArrays];
+    int*** _arrays = new int**[numArrays];
 
     for (int i = 0; i < numArrays; i++) {
-        _arrays[i] = LibraryCode::allocateArray(rows + (2 * border), columns + (2 * border));
+        _arrays[i] = LibraryCode::allocateArray<int>(rows + (2 * border), columns + (2 * border));
 
         // Create teh border
         for (int row = 0; row < rows; row++) {
@@ -131,13 +136,27 @@ int main(int argc, char** argv) {
 
 //    auto groups = calculateRowGroups(matrix, numThreads);
 
+    util::FixedSizeQueue<int, 3> windowTracker;
+
+    constexpr int tracker_size = 3;
+    int tracker[3];
+    int index = 0, tracker_sum = 0;
+
+
+//#define STANDARD_NO_CHECK
+#define WINDOWS
+
+
     for (int i = 0; i < iterations; i++) {
         // times for 1000x1000
         // goal: 2.6
 
+        const auto offset = matrix.getOffset();
+        const auto nextOffset = matrix.getNextOffset();
 
-        const int nextOffset = matrix.getNextOffset();
-        const int offset  = matrix.getOffset();
+
+        // region standard_no_check
+        #ifdef STANDARD_NO_CHECK
 
         for (int row = 1; row < rows + 1; row++) {
             for (int column = 1; column < columns + 1; column++) {
@@ -197,6 +216,105 @@ int main(int argc, char** argv) {
         }
 
         matrix.incrementOffset();
+        #endif
+        // endregion
+
+        // region windows
+        #ifdef WINDOWS
+
+        for (int row = 1; row < rows+1; row++) {
+
+//            windowTracker.resetQueue();
+
+            tracker[0] = 0;
+            tracker[1] = 0;
+            tracker[2] = 0;
+            index = 1;
+            tracker_sum = 0;
+
+            tracker[0] = _arrays[offset][row - 1][1] +
+                         _arrays[offset][row]    [1] +
+                         _arrays[offset][row + 1][1];
+
+            tracker_sum += tracker[0];
+
+//            // load in the first column of data
+//            windowTracker.push(_arrays[offset][row - 1][1] +
+//                               _arrays[offset][row]    [1] +
+//                               _arrays[offset][row + 1][1]);
+
+//            std::cout << std::endl;
+
+            for (int col = 2; col < columns+1; col++) {
+
+                // load in the current column (start at two because we write behind)
+                tracker_sum -= tracker[index];
+
+                tracker[index] = _arrays[offset][row - 1][col] +
+                                 _arrays[offset][row    ][col] +
+                                 _arrays[offset][row + 1][col];
+
+                tracker_sum += tracker[index];
+
+                index = (index + 1) % 3;
+
+//                windowTracker.push(_arrays[offset][row - 1][col] +
+//                                   _arrays[offset][row    ][col] +
+//                                   _arrays[offset][row + 1][col]);
+
+//                std::cout << "sum: " << windowTracker.sum()  - _arrays[offset][row][col-1] << " | ";
+
+                // use the sum to set the previous column's cell
+//                switch (windowTracker.sum() - _arrays[offset][row][col-1]) {
+                switch (tracker_sum - _arrays[offset][row][col-1]) {
+                    case (2):
+                        _arrays[nextOffset][row][col-1] = _arrays[offset][row][col-1];
+                        continue;
+                        break;
+                    case (3):
+                        _arrays[nextOffset][row][col-1] = true;
+                        continue;
+                        break;
+                    default:
+                        _arrays[nextOffset][row][col-1] = false;
+                        continue;
+                        break;
+                }
+            }
+
+            // push the 0 for the last column so we can calculate the last cell in the row
+//            windowTracker.push(0);
+
+            tracker_sum -= tracker[index];
+
+            tracker[index] = 0;
+
+            tracker_sum += tracker[index];
+
+//            std::cout << "sum: " << windowTracker.sum()  - _arrays[offset][row][columns] << " | ";
+
+//            switch (windowTracker.sum() - _arrays[offset][row][columns]) {
+            switch (tracker_sum - _arrays[offset][row][columns]) {
+                case (2):
+                    _arrays[nextOffset][row][columns] = _arrays[offset][row][columns];
+                    continue;
+                    break;
+                case (3):
+                    _arrays[nextOffset][row][columns] = true;
+                    continue;
+                    break;
+                default:
+                    _arrays[nextOffset][row][columns] = false;
+                    continue;
+                    break;
+            }
+        }
+//        std::cout << std::endl;
+
+
+        matrix.incrementOffset();
+        #endif
+        // endregion
 
 
 //        if (i == printCount * multiplier) {
@@ -221,10 +339,10 @@ int main(int argc, char** argv) {
         cout << "end matrix " << endl;
         std::stringstream msg("");
         msg << "[" << endl;
-        for (int i = 0; i < rows; i++) {
+        for (int i = + 1; i < rows + 1; i++) {
             msg << "[ ";
-            for (int j = 0; j < columns; j++) {
-                msg << (_arrays[matrix.getOffset()][i + 1][j + 1] == 1 ? 1 : 0) << " ";
+            for (int j = 1; j < columns + 1; j++) {
+                msg << (_arrays[matrix.getOffset()][i][j] == 1 ? 1 : 0) << " ";
             }
             msg << "]" << endl;
         }
@@ -240,7 +358,8 @@ int main(int argc, char** argv) {
 
             for (int i = 0; i < matrix.rows(); i++) {
                 for (int j = 0; j < matrix.columns(); j++) {
-                    if (test2.at((i * rows) + j) != _arrays[offset][i + 1][j + 1]) {
+                    cout << "test: " << test2.at((i*rows) + j) << ", result: " << (_arrays[offset][i+1][j+1] == 1 ? 1 : 0) << endl;
+                    if (test2.at((i * rows) + j) != (_arrays[offset][i+1][j+1] == 1 ? 1 : 0)) {
                         success = false;
                         break;
                     }

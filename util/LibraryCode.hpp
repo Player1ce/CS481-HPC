@@ -8,9 +8,26 @@
 #include <memory>
 
 namespace util::LibraryCode {
-    uint8_t **allocateArray(int rows, int cols);
+    template <typename T>
+    T** allocateArray(const int rows, const int cols) {
+        T* block;
+        T** grid;
 
-    void deleteArray(uint8_t** array);
+        block = new T[rows * cols];
+        grid = new T*[rows];
+
+        for (int i = 0; i < rows; i++)
+            grid[i] = &block[i * cols];
+
+        return grid;
+    }
+
+
+    template <typename T>
+    void deleteArray(T** array) {
+        delete[] array[0];
+        delete[] array;
+    }
 }
 
 #endif //CS481_HPC_LIBRARYCODE_HPP

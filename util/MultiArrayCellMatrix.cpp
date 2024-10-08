@@ -11,7 +11,7 @@ namespace util {
     {
         _arrays = new uint8_t**[numArrays+1];
         for (int i = 0; i < numArrays + 1; i++) {
-            _arrays[i] = LibraryCode::allocateArray(rows + (2 * border), columns + (2 * border));
+            _arrays[i] = LibraryCode::allocateArray<uint8_t>(rows + (2 * border), columns + (2 * border));
 
             // Create teh border
             for (int row = 0; row < rows; row++) {
