@@ -389,6 +389,7 @@ bool updateCellsUsingThreadPool(util::ICellMatrix &matrix, util::ThreadPool &thr
 
     for (auto & rowGroup : rowGroups) {
         // for (int row = 0; row < matrix.rows(); row++) {
+
         threadPool.enqueue([nextOffset
                                    // , row
                                    , &rowGroup
