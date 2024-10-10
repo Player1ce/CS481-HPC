@@ -2,9 +2,13 @@
 // Created by motst on 10/3/2024.
 //
 
-#include "../util/ICellMatrix.hpp"
 #include "../util/MultiArrayCellMatrix.hpp"
 #include "../util/FixedSizeQueue.hpp"
+#include "UpdateMethods.hpp"
+
+#ifdef _OPENMP
+# include <omp.h>
+#endif
 
 using namespace std;
 using namespace util;
@@ -23,7 +27,7 @@ int main(int argc, char** argv) {
 
     constexpr int printThreshold = 50;
 
-    int numThreads = 10;
+    int numThreads = 6;
 
     if (argc < 2) {
         cout << "Using coded constants" << endl;
@@ -54,23 +58,17 @@ int main(int argc, char** argv) {
         numThreads = atoi(argv[4]);
     }
 
-
-    if (rows == 5 && columns == 5) {
-        cout << "size is 5 but iterations is not 1 so initializer list will not be used";
-    }
-
-
     int printCount = max(iterations / 10, 1);
 
     chrono::time_point<chrono::system_clock> start, end;
 
-//    ICellMatrix matrix = CellMatrix(rows, columns, maxOffset);
-    MultiArrayCellMatrix matrix = MultiArrayCellMatrix(rows, columns, maxOffset);
+    MultiArrayCellMatrix matrix = MultiArrayCellMatrix(1, 1, maxOffset);
 
-    int numArrays = 2;
+    constexpr int numArrays = 2;
     int border = 1;
 
-    int*** _arrays = new int**[numArrays];
+//    int*** _arrays = new int**[2];
+    int** _arrays[2];
 
     for (int i = 0; i < numArrays; i++) {
         _arrays[i] = LibraryCode::allocateArray<int>(rows + (2 * border), columns + (2 * border));
@@ -120,7 +118,6 @@ int main(int argc, char** argv) {
     }
 
 
-
     const int sum = matrix.getSum();
 
 
@@ -128,23 +125,28 @@ int main(int argc, char** argv) {
         cout << matrix << endl;
     }
 
-//    ThreadPool threadPool(numThreads);
-
     bool updateOccurred = true;
+
+
+#define STANDARD_NO_CHECK
+//#define STANDARD_NO_CHECK_OMP
+//#define WINDOWS
 
     start = chrono::system_clock::now();
 
-//    auto groups = calculateRowGroups(matrix, numThreads);
+//    ThreadPool threadPool(numThreads);
 
-    util::FixedSizeQueue<int, 3> windowTracker;
+#ifdef STANDARD_NO_CHECK_OMP
+    auto groups = calculateRowGroups(matrix, numThreads);
+    int groups_size = groups.size();
+    numThreads = (groups_size < numThreads ? groups_size : numThreads);
+#endif
 
-    constexpr int tracker_size = 3;
+//    constexpr int tracker_size = 3;
     int tracker[3];
-    int index = 0, tracker_sum = 0;
 
+//    int index = 0, tracker_sum = 0;
 
-//#define STANDARD_NO_CHECK
-#define WINDOWS
 
 
     for (int i = 0; i < iterations; i++) {
@@ -167,61 +169,86 @@ int main(int argc, char** argv) {
                         + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] + _arrays[offset][row + 1][column + 1]
                         ) {
                     case (2):
-//                        matrix.set(row, column, matrix.get(row, column), nextOffset);
                         _arrays[nextOffset][row][column] = _arrays[offset][row][column];
                         continue;
                         break;
                     case (3):
-//                        matrix.set(row, column, true, nextOffset);
                         _arrays[nextOffset][row][column] = true;
                         continue;
                         break;
                     default:
-//                        matrix.set(row, column, false, nextOffset);
                         _arrays[nextOffset][row][column] = false;
                         continue;
                         break;
                 }
-
-
-//                int neighborsAlive = 0;
-//
-//                #ifdef CELL_UPDATE_DEBUG_LOGGING
-//                std::cout << "[" << std::endl;
-//                #endif
-//
-//                for (int i = -1; i <= 1; i++) {
-//                #ifdef CELL_UPDATE_DEBUG_LOGGING
-//                    std::cout << "[";
-//                #endif
-//
-//                    for (int j = -1; j <=1; j++) {
-//                #ifdef CELL_UPDATE_DEBUG_LOGGING
-//                        std::cout << " " << _arrays[offset][row + i][column + j];
-//                #endif
-//                        if (i != 0 || j != 0) {
-//                            neighborsAlive += _arrays[offset][row + i][column + j];
-//                        }
-//                    }
-//                #ifdef CELL_UPDATE_DEBUG_LOGGING
-//                    std::cout << "]" << std::endl;
-//                #endif
-//
-//                    if (neighborsAlive >= 4) {
-//                        break;
-//                    }
-//                }
             }
 
         }
 
-        matrix.incrementOffset();
+        #endif
+        // endregion
+
+
+        // region standard_no_check_omp
+        #ifdef STANDARD_NO_CHECK_OMP
+
+        #pragma omp parallel num_threads(numThreads) \
+            default(none) \
+            shared(_arrays, rows, columns, offset, nextOffset, groups, cout)
+        {
+
+
+            int my_rank;
+            #ifdef _OPENMP
+            my_rank = omp_get_thread_num();
+            #else
+            my_rank = 0;
+            #endif
+
+//            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
+
+            for (int row = groups.at(my_rank).first + 1; row < groups.at(my_rank).second + 1; row++) {
+                for (int column = 1; column < columns + 1; column++) {
+
+//                    int sum = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+//                              _arrays[offset][row - 1][column + 1]
+//                              + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+//                              + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+//                              _arrays[offset][row + 1][column + 1];
+//
+//                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+
+                    switch (
+                            _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                            _arrays[offset][row - 1][column + 1]
+                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                            _arrays[offset][row + 1][column + 1]
+                            ) {
+                        case (2):
+                            _arrays[nextOffset][row][column] = _arrays[offset][row][column];
+                            continue;
+                            break;
+                        case (3):
+                            _arrays[nextOffset][row][column] = true;
+                            continue;
+                            break;
+                        default:
+                            _arrays[nextOffset][row][column] = false;
+                            continue;
+                            break;
+                    }
+                }
+//                cout << endl;
+            }
+            #pragma omp barrier
+        }
+
         #endif
         // endregion
 
         // region windows
         #ifdef WINDOWS
-
         for (int row = 1; row < rows+1; row++) {
 
 //            windowTracker.resetQueue();
@@ -229,19 +256,14 @@ int main(int argc, char** argv) {
             tracker[0] = 0;
             tracker[1] = 0;
             tracker[2] = 0;
-            index = 1;
-            tracker_sum = 0;
 
-            tracker[0] = _arrays[offset][row - 1][1] +
-                         _arrays[offset][row]    [1] +
-                         _arrays[offset][row + 1][1];
+            int index = 1;
+            int tracker_sum = _arrays[offset][row - 1][1] +
+                              _arrays[offset][row]    [1] +
+                              _arrays[offset][row + 1][1];
 
-            tracker_sum += tracker[0];
+            tracker[0] = tracker_sum;
 
-//            // load in the first column of data
-//            windowTracker.push(_arrays[offset][row - 1][1] +
-//                               _arrays[offset][row]    [1] +
-//                               _arrays[offset][row + 1][1]);
 
 //            std::cout << std::endl;
 
@@ -258,63 +280,62 @@ int main(int argc, char** argv) {
 
                 index = (index + 1) % 3;
 
-//                windowTracker.push(_arrays[offset][row - 1][col] +
-//                                   _arrays[offset][row    ][col] +
-//                                   _arrays[offset][row + 1][col]);
+                int current_val = _arrays[offset][row][col-1];
+                int adjusted_sum = tracker_sum - current_val;
 
-//                std::cout << "sum: " << windowTracker.sum()  - _arrays[offset][row][col-1] << " | ";
+                _arrays[nextOffset][row][col - 1] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
 
-                // use the sum to set the previous column's cell
-//                switch (windowTracker.sum() - _arrays[offset][row][col-1]) {
-                switch (tracker_sum - _arrays[offset][row][col-1]) {
-                    case (2):
-                        _arrays[nextOffset][row][col-1] = _arrays[offset][row][col-1];
-                        continue;
-                        break;
-                    case (3):
-                        _arrays[nextOffset][row][col-1] = true;
-                        continue;
-                        break;
-                    default:
-                        _arrays[nextOffset][row][col-1] = false;
-                        continue;
-                        break;
-                }
+//                switch (tracker_sum - current_val) {
+//                    case (2):
+//                        _arrays[nextOffset][row][col-1] = current_val;
+//                        continue;
+//                        break;
+//                    case (3):
+//                        _arrays[nextOffset][row][col-1] = true;
+//                        continue;
+//                        break;
+//                    default:
+//                        _arrays[nextOffset][row][col-1] = false;
+//                        continue;
+//                        break;
+//                }
             }
 
-            // push the 0 for the last column so we can calculate the last cell in the row
-//            windowTracker.push(0);
 
             tracker_sum -= tracker[index];
 
             tracker[index] = 0;
 
-            tracker_sum += tracker[index];
+            int current_val = _arrays[offset][row][columns];
+            int adjusted_sum = tracker_sum - current_val;
 
-//            std::cout << "sum: " << windowTracker.sum()  - _arrays[offset][row][columns] << " | ";
+
+            _arrays[nextOffset][row][columns] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
 
 //            switch (windowTracker.sum() - _arrays[offset][row][columns]) {
-            switch (tracker_sum - _arrays[offset][row][columns]) {
-                case (2):
-                    _arrays[nextOffset][row][columns] = _arrays[offset][row][columns];
-                    continue;
-                    break;
-                case (3):
-                    _arrays[nextOffset][row][columns] = true;
-                    continue;
-                    break;
-                default:
-                    _arrays[nextOffset][row][columns] = false;
-                    continue;
-                    break;
-            }
+
+//            switch (tracker_sum - current_val) {
+//                case (2):
+//                    _arrays[nextOffset][row][columns] = current_val;
+//                    continue;
+//                    break;
+//                case (3):
+//                    _arrays[nextOffset][row][columns] = true;
+//                    continue;
+//                    break;
+//                default:
+//                    _arrays[nextOffset][row][columns] = false;
+//                    continue;
+//                    break;
+//            }
         }
 //        std::cout << std::endl;
 
 
-        matrix.incrementOffset();
         #endif
         // endregion
+
+        matrix.incrementOffset();
 
 
 //        if (i == printCount * multiplier) {
@@ -358,12 +379,13 @@ int main(int argc, char** argv) {
 
             for (int i = 0; i < matrix.rows(); i++) {
                 for (int j = 0; j < matrix.columns(); j++) {
-                    cout << "test: " << test2.at((i*rows) + j) << ", result: " << (_arrays[offset][i+1][j+1] == 1 ? 1 : 0) << endl;
+                    cout << "[t:" << test2.at((i*rows) + j) << ", r:" << (_arrays[offset][i+1][j+1] == 1 ? 1 : 0) << "] ";
                     if (test2.at((i * rows) + j) != (_arrays[offset][i+1][j+1] == 1 ? 1 : 0)) {
                         success = false;
                         break;
                     }
                 }
+                std::cout << std::endl;
             }
 
             cout << "Success2: " << boolalpha << success << endl;
@@ -374,7 +396,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < maxOffset; i++) {
         LibraryCode::deleteArray(_arrays[i]);
 
-        delete[] _arrays;
+//        delete[] _arrays;
     }
 
     const double percent = (sum / static_cast<double>(rows*columns)) * 100.0;
