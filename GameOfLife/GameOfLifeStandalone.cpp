@@ -15,6 +15,56 @@ using namespace util;
 
 #define CELL_UPDATE_DEBUG_LOGGING
 
+template<typename T>
+void fillFromVector(T** array, const int rows, const int columns, const vector<bool> & list, const int border) {
+    for (int i = border; i < rows + border; i++) {
+        for (int j = border; j < columns + border; j++)
+            array[i][j] = list.at(columns * (i - border) + (j - border));
+    }
+}
+
+template<typename T>
+void fillWithRandom(T** array, const int rows, const int columns, const int border, const int min = 0, const int max = 1)
+{
+    // Create a random number generator
+    std::random_device seed;
+    std::mt19937 generator(seed());
+
+    // Create a distribution for your desired range
+    std::uniform_int_distribution<int> distribution(min, max);
+
+    for (int i = border; i < rows + border; i++) {
+        for (int j = border; j < columns + border; j++)
+            array[i][j] = distribution(generator);
+    }
+}
+
+template <typename T>
+int getSum(T** array, const int rows, const int columns, const int border) {
+    int sum = 0;
+    for (int i = border; i < rows + border; i++) {
+        for (int j = border; j < columns + border; j++) {
+            sum += array[i][j];
+        }
+    }
+    return sum;
+}
+
+template<typename T>
+std::string arrayToString(T** array, const int rows, const int columns, const int border ) {
+    std::stringstream msg("");
+    msg << "[" << endl;
+    for (int i = border; i < rows + border; i++) {
+        msg << "[ ";
+        for (int j = border; j < columns + border; j++) {
+            msg << array[i][j] << " ";
+        }
+        msg << "]" << endl;
+    }
+    msg << "]" << endl;
+    return msg.str();
+}
+
 int main(int argc, char** argv) {
     int rows = 1000;
     int columns = rows;
@@ -26,6 +76,9 @@ int main(int argc, char** argv) {
     constexpr int maxOffset = 1;
 
     constexpr int printThreshold = 50;
+
+    constexpr int border = 1;
+    constexpr int numArrays = 2;
 
     int numThreads = 6;
 
@@ -47,8 +100,10 @@ int main(int argc, char** argv) {
     else if (argc == 4) {
         cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << endl;
         rows = atoi(argv[1]);
-        columns = atoi(argv[2]);
-        iterations = atoi(argv[3]);
+        columns = rows;
+        iterations = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
+
     }
     else if (argc == 5) {
         cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << " and numThreads: " << argv[4] << endl;
@@ -60,20 +115,16 @@ int main(int argc, char** argv) {
 
     int printCount = max(iterations / 10, 1);
 
-    chrono::time_point<chrono::system_clock> start, end;
-
     MultiArrayCellMatrix matrix = MultiArrayCellMatrix(1, 1, maxOffset);
 
-    constexpr int numArrays = 2;
-    int border = 1;
+    int*** _arrays = new int**[2];
+//    int** _arrays[2];
 
-//    int*** _arrays = new int**[2];
-    int** _arrays[2];
-
+    // create the arrays and their borders
     for (int i = 0; i < numArrays; i++) {
         _arrays[i] = LibraryCode::allocateArray<int>(rows + (2 * border), columns + (2 * border));
 
-        // Create teh border
+        // Create the border
         for (int row = 0; row < rows; row++) {
             for (int colInset = 0; colInset < border; colInset++) {
                 _arrays[i][row][colInset] = 0;
@@ -89,6 +140,8 @@ int main(int argc, char** argv) {
         }
     }
 
+    // fill with random
+    fillWithRandom(_arrays[0], rows, columns, border);
     matrix.fillWithRandom();
 
 
@@ -109,24 +162,20 @@ int main(int argc, char** argv) {
     };
 
     if (useInitializerList) {
-        matrix.fillFromVector(initializer2);
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++)
-                _arrays[0][i+1][j+1] = initializer2.at(columns * i + j);
-        }
+        fillFromVector(_arrays[0], rows, columns, initializer2, border);
     }
 
-
-    const int sum = matrix.getSum();
+    const int sum = getSum(_arrays[0], rows, columns, border);
 
 
     if (rows*columns < printThreshold * printThreshold) {
-        cout << matrix << endl;
+        cout << arrayToString(_arrays[0], rows, columns, border) << endl;
     }
 
-    bool updateOccurred = true;
+    bool updateOccurred = false;
 
+
+    chrono::time_point<chrono::system_clock> start, end;
 
 #define STANDARD_NO_CHECK
 //#define STANDARD_NO_CHECK_OMP
@@ -145,23 +194,19 @@ int main(int argc, char** argv) {
 //    constexpr int tracker_size = 3;
     int tracker[3];
 
-//    int index = 0, tracker_sum = 0;
-
-
-
     for (int i = 0; i < iterations; i++) {
         // times for 1000x1000
         // goal: 2.6
 
-        const auto offset = matrix.getOffset();
-        const auto nextOffset = matrix.getNextOffset();
+        const int offset = matrix.getOffset();
+        const int nextOffset = matrix.getNextOffset();
 
 
         // region standard_no_check
         #ifdef STANDARD_NO_CHECK
 
-        for (int row = 1; row < rows + 1; row++) {
-            for (int column = 1; column < columns + 1; column++) {
+        for (int row = border; row < rows + border; row++) {
+            for (int column = border; column < columns + border; column++) {
 
                 switch (
                         _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] + _arrays[offset][row - 1][column + 1]
@@ -207,8 +252,8 @@ int main(int argc, char** argv) {
 
 //            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
 
-            for (int row = groups.at(my_rank).first + 1; row < groups.at(my_rank).second + 1; row++) {
-                for (int column = 1; column < columns + 1; column++) {
+            for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+                for (int column = border; column < columns + border; column++) {
 
 //                    int sum = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
 //                              _arrays[offset][row - 1][column + 1]
@@ -249,7 +294,7 @@ int main(int argc, char** argv) {
 
         // region windows
         #ifdef WINDOWS
-        for (int row = 1; row < rows+1; row++) {
+        for (int row = border; row < rows+border; row++) {
 
 //            windowTracker.resetQueue();
 
@@ -258,16 +303,16 @@ int main(int argc, char** argv) {
             tracker[2] = 0;
 
             int index = 1;
-            int tracker_sum = _arrays[offset][row - 1][1] +
-                              _arrays[offset][row]    [1] +
-                              _arrays[offset][row + 1][1];
+            int tracker_sum = _arrays[offset][row - 1][border] +
+                              _arrays[offset][row]    [border] +
+                              _arrays[offset][row + 1][border];
 
             tracker[0] = tracker_sum;
 
 
 //            std::cout << std::endl;
 
-            for (int col = 2; col < columns+1; col++) {
+            for (int col = border + 1; col < columns+border; col++) {
 
                 // load in the current column (start at two because we write behind)
                 tracker_sum -= tracker[index];
@@ -306,25 +351,23 @@ int main(int argc, char** argv) {
 
             tracker[index] = 0;
 
-            int current_val = _arrays[offset][row][columns];
+            int current_val = _arrays[offset][row][columns + (border - 1)];
             int adjusted_sum = tracker_sum - current_val;
 
 
-            _arrays[nextOffset][row][columns] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
-
-//            switch (windowTracker.sum() - _arrays[offset][row][columns]) {
+            _arrays[nextOffset][row][columns + (border - 1)] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
 
 //            switch (tracker_sum - current_val) {
 //                case (2):
-//                    _arrays[nextOffset][row][columns] = current_val;
+//                    _arrays[nextOffset][row][columns + (border - 1)] = current_val;
 //                    continue;
 //                    break;
 //                case (3):
-//                    _arrays[nextOffset][row][columns] = true;
+//                    _arrays[nextOffset][row][columns + (border - 1)] = true;
 //                    continue;
 //                    break;
 //                default:
-//                    _arrays[nextOffset][row][columns] = false;
+//                    _arrays[nextOffset][row][columns + (border - 1)] = false;
 //                    continue;
 //                    break;
 //            }
@@ -357,19 +400,7 @@ int main(int argc, char** argv) {
     cout << "System took: " << seconds << "." << decimal << " seconds to run" << endl;
 
     if (rows*columns < printThreshold*printThreshold) {
-        cout << "end matrix " << endl;
-        std::stringstream msg("");
-        msg << "[" << endl;
-        for (int i = + 1; i < rows + 1; i++) {
-            msg << "[ ";
-            for (int j = 1; j < columns + 1; j++) {
-                msg << (_arrays[matrix.getOffset()][i][j] == 1 ? 1 : 0) << " ";
-            }
-            msg << "]" << endl;
-        }
-        msg << "]" << endl;
-
-        cout << msg.str() << endl;
+        cout << "end matrix " << endl << arrayToString(_arrays[matrix.getOffset()], rows, columns, border);
     }
 
     if (useInitializerList) {
@@ -377,10 +408,10 @@ int main(int argc, char** argv) {
             bool success = true;
             const int offset = matrix.getOffset();
 
-            for (int i = 0; i < matrix.rows(); i++) {
-                for (int j = 0; j < matrix.columns(); j++) {
-                    cout << "[t:" << test2.at((i*rows) + j) << ", r:" << (_arrays[offset][i+1][j+1] == 1 ? 1 : 0) << "] ";
-                    if (test2.at((i * rows) + j) != (_arrays[offset][i+1][j+1] == 1 ? 1 : 0)) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    cout << "[t:" << test2.at((i*rows) + j) << ", r:" << (_arrays[offset][i + border][j + border] == 1 ? 1 : 0) << "] ";
+                    if (test2.at((i * rows) + j) != (_arrays[offset][i + border][j + border] == 1 ? 1 : 0)) {
                         success = false;
                         break;
                     }
@@ -396,7 +427,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < maxOffset; i++) {
         LibraryCode::deleteArray(_arrays[i]);
 
-//        delete[] _arrays;
+        delete[] _arrays;
     }
 
     const double percent = (sum / static_cast<double>(rows*columns)) * 100.0;
