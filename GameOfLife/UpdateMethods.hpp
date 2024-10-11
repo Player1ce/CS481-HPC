@@ -6,7 +6,7 @@
 #define CS481_HPC_UPDATEMETHODS_HPP
 
 #include "../util/ICellMatrix.hpp"
-//#include "../util/CellMatrix.hpp"
+#include "../util/LibraryCode.hpp"
 #include "../util/ThreadPool.hpp"
 #include "../util/FixedSizeQueue.hpp"
 
@@ -77,6 +77,9 @@ inline bool updateCellsRowOptimized(util::ICellMatrix &matrix,
 
 }
 
+std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, int numGroups) {
+    return util::LibraryCode::calculateRowGroups(matrix.rows(), numGroups);
+}
 
 inline bool getCellUpdate(util::ICellMatrix &grid, int row, int column, int neighborsAlive) {
     #ifdef CELL_UPDATE_DEBUG_LOGGING
@@ -339,43 +342,6 @@ void updateCellsUsingThreadPool_Windows(util::ICellMatrix &matrix, util::ThreadP
 
     matrix.incrementOffset();
 }
-
-std::vector<std::pair<int, int>> calculateRowGroups(const int rows, int numGroups) {
-
-    if (numGroups < 0) {
-        numGroups = 1;
-    }
-
-    if (numGroups > rows) {
-        numGroups = rows;
-    }
-
-    int groupSize = rows/numGroups;
-    int overhang = rows%numGroups;
-    int previousOverhang = 0;
-    int allocatedOverhang = 0;
-
-    std::vector<std::pair<int, int>> rowGroups(numGroups);
-
-    for (int i = 0; i < numGroups; i++) {
-        rowGroups.at(i) = std::make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
-
-        if (i < overhang) {
-            rowGroups.at(i).second += 1;
-            previousOverhang = 1;
-            allocatedOverhang++;
-        } else {
-            previousOverhang = 0;
-        }
-    }
-
-    return rowGroups;
-}
-
-std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, int numGroups) {
-    return calculateRowGroups(matrix.rows(), numGroups);
-}
-
 
 bool updateCellsUsingThreadPool(util::ICellMatrix &matrix, util::ThreadPool &threadPool, std::vector<std::pair<int, int>>& rowGroups) {
     // std::cout << "Update Started" << std::endl;

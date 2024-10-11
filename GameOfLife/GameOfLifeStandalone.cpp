@@ -2,11 +2,13 @@
 // Created by motst on 10/3/2024.
 //
 
-#include "../util/MultiArrayCellMatrix.hpp"
-#include "../util/FixedSizeQueue.hpp"
-#include "UpdateMethods.hpp"
+#include "../util/LibraryCode.hpp"
 
-#include <atomic>
+#include <random>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <chrono>
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -220,7 +222,7 @@ int main(int argc, char** argv) {
 //    ThreadPool threadPool(numThreads);
 
 #if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP)
-    auto groups = calculateRowGroups(rows, numThreads);
+    auto groups = LibraryCode::calculateRowGroups(rows, numThreads);
     int groups_size = groups.size();
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
 #endif
