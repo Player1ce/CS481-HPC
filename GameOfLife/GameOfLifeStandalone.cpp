@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
-    int numThreads = 1;
+    int numThreads = 5;
 
     if (argc < 2) {
         cout << "Using coded constants" << endl;
@@ -210,9 +210,9 @@ int main(int argc, char** argv) {
     chrono::time_point<chrono::system_clock> start, end;
 
 //#define STANDARD_NO_CHECK
-#define STANDARD_CHECK
+//#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
-//#define STANDARD_CHECK_OMP
+#define STANDARD_CHECK_OMP
 //#define WINDOWS
 
     start = chrono::system_clock::now();
