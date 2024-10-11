@@ -340,18 +340,18 @@ void updateCellsUsingThreadPool_Windows(util::ICellMatrix &matrix, util::ThreadP
     matrix.incrementOffset();
 }
 
-std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, int numGroups) {
+std::vector<std::pair<int, int>> calculateRowGroups(const int rows, int numGroups) {
 
     if (numGroups < 0) {
         numGroups = 1;
     }
 
-    if (numGroups > matrix.rows()) {
-        numGroups = matrix.rows();
+    if (numGroups > rows) {
+        numGroups = rows;
     }
 
-    int groupSize = matrix.rows()/numGroups;
-    int overhang = matrix.rows()%numGroups;
+    int groupSize = rows/numGroups;
+    int overhang = rows%numGroups;
     int previousOverhang = 0;
     int allocatedOverhang = 0;
 
@@ -370,6 +370,10 @@ std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, i
     }
 
     return rowGroups;
+}
+
+std::vector<std::pair<int, int>> calculateRowGroups(util::ICellMatrix &matrix, int numGroups) {
+    return calculateRowGroups(matrix.rows(), numGroups);
 }
 
 

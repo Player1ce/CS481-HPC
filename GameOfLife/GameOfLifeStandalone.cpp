@@ -6,6 +6,8 @@
 #include "../util/FixedSizeQueue.hpp"
 #include "UpdateMethods.hpp"
 
+#include <atomic>
+
 #ifdef _OPENMP
 # include <omp.h>
 #endif
@@ -65,7 +67,53 @@ std::string arrayToString(T** array, const int rows, const int columns, const in
     return msg.str();
 }
 
+
+vector<bool> initializer = {
+        true, true, false, false, true,
+        false, true, true, false, false,
+        true, true, false, false, true,
+        false, true, true, true, true,
+        true, true, true, false, true
+};
+
+vector<bool> test = {
+        true, true, true, false, false,
+        false, false, true, true, false,
+        true, false, false, false, true,
+        false, false, false, false, true,
+        true, false, false, false, true,
+};
+
+vector<bool> initializer2 = {
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, true, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false
+};
+
+auto tester2 = {
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false
+};
+// theirs
+//5000x1000: 46.3
+
+// standalone checked
+// 5000x1000: 25.7, 24.6
+
+
+// standalone 10 thread checked
+// 5000x1000: 11.4
+// 5000x5000: 54
+
 int main(int argc, char** argv) {
+//    initializer = initializer2;
+//    test = tester2;
+
     int rows = 1000;
     int columns = rows;
 
@@ -73,6 +121,8 @@ int main(int argc, char** argv) {
 
     bool useInitializerList = false;
 
+    int offset = 0;
+    int nextOffset = 1;
     constexpr int maxOffset = 1;
 
     constexpr int printThreshold = 50;
@@ -80,7 +130,7 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
-    int numThreads = 6;
+    int numThreads = 1;
 
     if (argc < 2) {
         cout << "Using coded constants" << endl;
@@ -115,10 +165,7 @@ int main(int argc, char** argv) {
 
     int printCount = max(iterations / 10, 1);
 
-    MultiArrayCellMatrix matrix = MultiArrayCellMatrix(1, 1, maxOffset);
-
     int*** _arrays = new int**[2];
-//    int** _arrays[2];
 
     // create the arrays and their borders
     for (int i = 0; i < numArrays; i++) {
@@ -142,90 +189,108 @@ int main(int argc, char** argv) {
 
     // fill with random
     fillWithRandom(_arrays[0], rows, columns, border);
-    matrix.fillWithRandom();
-
-
-    vector<bool> initializer2 = {
-            true, true, false, false, true,
-            false, true, true, false, false,
-            true, true, false, false, true,
-            false, true, true, true, true,
-            true, true, true, false, true
-    };
-
-    vector<bool> test2 = {
-            true, true, true, false, false,
-            false, false, true, true, false,
-            true, false, false, false, true,
-            false, false, false, false, true,
-            true, false, false, false, true,
-    };
 
     if (useInitializerList) {
-        fillFromVector(_arrays[0], rows, columns, initializer2, border);
+        fillFromVector(_arrays[0], rows, columns, initializer, border);
     }
 
     const int sum = getSum(_arrays[0], rows, columns, border);
-
 
     if (rows*columns < printThreshold * printThreshold) {
         cout << arrayToString(_arrays[0], rows, columns, border) << endl;
     }
 
-    bool updateOccurred = false;
+    int colsNoUpdates = 0;
+    int rowsNoUpdates = 0;
+
+    bool updateOccurred = true;
 
 
     chrono::time_point<chrono::system_clock> start, end;
 
-#define STANDARD_NO_CHECK
+//#define STANDARD_NO_CHECK
+#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
+//#define STANDARD_CHECK_OMP
 //#define WINDOWS
 
     start = chrono::system_clock::now();
 
 //    ThreadPool threadPool(numThreads);
 
-#ifdef STANDARD_NO_CHECK_OMP
-    auto groups = calculateRowGroups(matrix, numThreads);
+#if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP)
+    auto groups = calculateRowGroups(rows, numThreads);
     int groups_size = groups.size();
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
 #endif
 
 //    constexpr int tracker_size = 3;
     int tracker[3];
-
-    for (int i = 0; i < iterations; i++) {
-        // times for 1000x1000
-        // goal: 2.6
-
-        const int offset = matrix.getOffset();
-        const int nextOffset = matrix.getNextOffset();
-
+    int currentIteration = 0;
+    for (currentIteration = 0; currentIteration < iterations; currentIteration++) {
+        // standard_no_check 0.5
+        // standard_check 0.8
+        // standard_no_check_omp 0.55
+        // standard_check_omp: 0.87
 
         // region standard_no_check
         #ifdef STANDARD_NO_CHECK
 
+        // mine: 0.5
+        // theirs: 1.6
+
         for (int row = border; row < rows + border; row++) {
             for (int column = border; column < columns + border; column++) {
+                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                            _arrays[offset][row - 1][column + 1]
+                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                            _arrays[offset][row + 1][column + 1];
 
-                switch (
-                        _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] + _arrays[offset][row - 1][column + 1]
-                        + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-                        + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] + _arrays[offset][row + 1][column + 1]
-                        ) {
-                    case (2):
-                        _arrays[nextOffset][row][column] = _arrays[offset][row][column];
-                        continue;
-                        break;
-                    case (3):
-                        _arrays[nextOffset][row][column] = true;
-                        continue;
-                        break;
-                    default:
-                        _arrays[nextOffset][row][column] = false;
-                        continue;
-                        break;
+                int oldVal = _arrays[offset][row][column];
+                int newVal = 0;
+
+                if (value == 3) {
+                    newVal = 1;
                 }
+                else if (value == 2) {
+                    newVal = oldVal;
+                }
+                _arrays[nextOffset][row][column] = newVal;
+
+//                if (_arrays[offset][row][column]) { // cell was alive in the earlier iteration
+//                    if (value < 2 || value > 3) {
+//                        _arrays[nextOffset][row][column] = 0;
+//                    }
+//                    else // value must be 2 or 3, so no need to check explicitly
+//                        _arrays[nextOffset][row][column] = 1 ; // no change
+//                }
+//                else { // cell was dead in the earlier iteration
+//                    if (value == 3) {
+//                        _arrays[nextOffset][row][column] = 1;
+//                    }
+//                    else
+//                        _arrays[nextOffset][row][column] = 0; // no change
+//                }
+
+//                switch (
+//                        _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] + _arrays[offset][row - 1][column + 1]
+//                        + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+//                        + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] + _arrays[offset][row + 1][column + 1]
+//                        ) {
+//                    case (2):
+//                        _arrays[nextOffset][row][column] = _arrays[offset][row][column];
+//                        continue;
+//                        break;
+//                    case (3):
+//                        _arrays[nextOffset][row][column] = true;
+//                        continue;
+//                        break;
+//                    default:
+//                        _arrays[nextOffset][row][column] = false;
+//                        continue;
+//                        break;
+//                }
             }
 
         }
@@ -233,6 +298,67 @@ int main(int argc, char** argv) {
         #endif
         // endregion
 
+        // region standard_check
+        #ifdef STANDARD_CHECK
+        updateOccurred = false;
+        colsNoUpdates = 0;
+        rowsNoUpdates = 0;
+
+        // mine (full check): 0.8
+        // mine (every time):
+        // theirs: 1.8 with bool;  1.9 with flag
+        //
+        // method 1updateOccurred = (oldVal != newVal) || updateOccurred;: 2.5
+        // method 2if (!updateOccurred && oldVal != newVal) updateOccurred = true;: 2.3
+        // flag method: 2.15
+        // flag += oldVal != newVal; : 2.2
+        //
+
+        for (int row = border; row < rows + border; row++) {
+            for (int column = border; column < columns + border; column++) {
+
+                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                            _arrays[offset][row - 1][column + 1]
+                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                            _arrays[offset][row + 1][column + 1];
+
+                int oldVal = _arrays[offset][row][column];
+                int newVal = 0;
+
+                if (value == 3) {
+                    newVal = 1;
+
+                }
+                else if (value == 2) {
+                    newVal = oldVal;
+                }
+
+                _arrays[nextOffset][row][column] = newVal;
+                colsNoUpdates += oldVal == newVal;
+
+//                if (_arrays[offset][row][column]) { // cell was alive in the earlier iteration
+//                    if (value < 2 || value > 3) {
+//                        _arrays[nextOffset][row][column] = 0;
+//                        flag++; // value changed
+//                    }
+//                    else // value must be 2 or 3, so no need to check explicitly
+//                        _arrays[nextOffset][row][column] = 1 ; // no change
+//                }
+//                else { // cell was dead in the earlier iteration
+//                    if (value == 3) {
+//                        _arrays[nextOffset][row][column] = 1;
+//                        flag++; // value changed
+//                    }
+//                    else
+//                        _arrays[nextOffset][row][column] = 0; // no change
+//                }
+            }
+            rowsNoUpdates += colsNoUpdates == columns;
+            colsNoUpdates = 0;
+        }
+        #endif
+        // endregion
 
         // region standard_no_check_omp
         #ifdef STANDARD_NO_CHECK_OMP
@@ -241,8 +367,6 @@ int main(int argc, char** argv) {
             default(none) \
             shared(_arrays, rows, columns, offset, nextOffset, groups, cout)
         {
-
-
             int my_rank;
             #ifdef _OPENMP
             my_rank = omp_get_thread_num();
@@ -255,38 +379,88 @@ int main(int argc, char** argv) {
             for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
                 for (int column = border; column < columns + border; column++) {
 
-//                    int sum = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
-//                              _arrays[offset][row - 1][column + 1]
-//                              + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-//                              + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
-//                              _arrays[offset][row + 1][column + 1];
-//
-//                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+                    int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                                _arrays[offset][row - 1][column + 1]
+                                + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                                + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                                _arrays[offset][row + 1][column + 1];
 
-                    switch (
-                            _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
-                            _arrays[offset][row - 1][column + 1]
-                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
-                            _arrays[offset][row + 1][column + 1]
-                            ) {
-                        case (2):
-                            _arrays[nextOffset][row][column] = _arrays[offset][row][column];
-                            continue;
-                            break;
-                        case (3):
-                            _arrays[nextOffset][row][column] = true;
-                            continue;
-                            break;
-                        default:
-                            _arrays[nextOffset][row][column] = false;
-                            continue;
-                            break;
+                    int oldVal = _arrays[offset][row][column];
+                    int newVal = 0;
+
+                    if (value == 3) {
+                        newVal = 1;
+
                     }
+                    else if (value == 2) {
+                        newVal = oldVal;
+                    }
+
+                    _arrays[nextOffset][row][column] = newVal;
                 }
 //                cout << endl;
             }
-            #pragma omp barrier
+        }
+
+        #endif
+        // endregion
+
+        // region standard_check_omp
+        #ifdef STANDARD_CHECK_OMP
+        rowsNoUpdates = 0;
+
+        #pragma omp parallel num_threads(numThreads) \
+            default(none) \
+            shared(_arrays, rows, columns, offset, nextOffset, groups, rowsNoUpdates, cout)
+
+        {
+            int my_rank;
+            int innerRowsNoUpdates = 0;
+            int innerColsNoUpdates = 0;
+
+            #ifdef _OPENMP
+            my_rank = omp_get_thread_num();
+//            cout << "my rank: " << my_rank << endl;
+            #else
+            my_rank = 0;
+            #endif
+
+//            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
+
+            for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+                for (int column = border; column < columns + border; column++) {
+
+                    int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                              _arrays[offset][row - 1][column + 1]
+                              + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                              + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                              _arrays[offset][row + 1][column + 1];
+
+                    int oldVal = _arrays[offset][row][column];
+                    int newVal = 0;
+
+                    if (value == 3) {
+                        newVal = 1;
+
+                    }
+                    else if (value == 2) {
+                        newVal = oldVal;
+                    }
+
+                    _arrays[nextOffset][row][column] = newVal;
+                    innerColsNoUpdates += oldVal == newVal;
+
+//                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+                }
+                innerRowsNoUpdates += innerColsNoUpdates == columns;
+                innerColsNoUpdates = 0;
+//                cout << endl;
+            }
+
+            #pragma omp critical
+            {
+                rowsNoUpdates += innerRowsNoUpdates;
+            }
         }
 
         #endif
@@ -378,17 +552,17 @@ int main(int argc, char** argv) {
         #endif
         // endregion
 
-        matrix.incrementOffset();
+        offset = nextOffset;
+        nextOffset = (offset + 1) % (maxOffset + 1);
 
+        if (rowsNoUpdates == rows) {
+            cout << "exiting early on iteration: " << currentIteration + 1 << " because there was no update" << endl;
+            break;
+        }
 
 //        if (i == printCount * multiplier) {
-//            cout << "On iteration: " << i << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
+//            cout << "On iteration: " << currentIteration << " , " << (i/static_cast<double>(iterations))*100.0  << "%" << endl;
 //              multiplier++;
-//        }
-//
-//        if (!updateOccurred) {
-//            cout << "exiting early because no update" << endl;
-//            break;
 //        }
     }
 
@@ -400,18 +574,17 @@ int main(int argc, char** argv) {
     cout << "System took: " << seconds << "." << decimal << " seconds to run" << endl;
 
     if (rows*columns < printThreshold*printThreshold) {
-        cout << "end matrix " << endl << arrayToString(_arrays[matrix.getOffset()], rows, columns, border);
+        cout << "end matrix " << endl << arrayToString(_arrays[offset], rows, columns, border);
     }
 
     if (useInitializerList) {
-        if (matrix.rows() * matrix.columns() < printThreshold * printThreshold) {
+        if (rows * columns < printThreshold * printThreshold) {
             bool success = true;
-            const int offset = matrix.getOffset();
 
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
-                    cout << "[t:" << test2.at((i*rows) + j) << ", r:" << (_arrays[offset][i + border][j + border] == 1 ? 1 : 0) << "] ";
-                    if (test2.at((i * rows) + j) != (_arrays[offset][i + border][j + border] == 1 ? 1 : 0)) {
+                    cout << "[t:" << test.at((i * rows) + j) << ", r:" << (_arrays[offset][i + border][j + border] == 1 ? 1 : 0) << "] ";
+                    if (test.at((i * rows) + j) != (_arrays[offset][i + border][j + border] == 1 ? 1 : 0)) {
                         success = false;
                         break;
                     }
@@ -419,7 +592,7 @@ int main(int argc, char** argv) {
                 std::cout << std::endl;
             }
 
-            cout << "Success2: " << boolalpha << success << endl;
+            cout << "Success: " << boolalpha << success << endl;
         }
     }
 
