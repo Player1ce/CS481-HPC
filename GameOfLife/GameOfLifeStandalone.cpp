@@ -108,7 +108,8 @@ auto tester2 = {
 
 // standalone 10 thread checked
 // 5000x1000: 11.4
-// 5000x5000: 54
+// 5000x5000: 54, 57.185
+// 10000x10000: 451.659
 
 int main(int argc, char** argv) {
 //    initializer = initializer2;
