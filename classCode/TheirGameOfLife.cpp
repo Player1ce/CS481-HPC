@@ -159,6 +159,10 @@ int main(int argc, char **argv) {
 
     printf("Time taken %f seconds for %d iterations\n", t2 - t1, k);
 
+    if (flag == 0) {
+        printf("Program exited early\n");
+    }
+
 #ifdef DEBUG1
     /* Display the life matrix after k iterations */
   printarray(life, N, k);
