@@ -11,6 +11,6 @@ module load intel
 # mem: 1000Mb
 # time: 5:30:00
 
-./Homework2 10000 1000
-#./Homework2 10000 1000
-#./Homework2 10000 1000
+./Homework3 10000 1000
+./Homework3 10000 1000
+./Homework3 10000 1000

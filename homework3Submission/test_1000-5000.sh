@@ -12,6 +12,6 @@ module load intel
 # time: 1:00:00 (default)
 # mem: 100Mb
 
-./Homework2 1000 5000
-./Homework2 1000 5000
-./Homework2 1000 5000
+./Homework3 1000 5000
+./Homework3 1000 5000
+./Homework3 1000 5000
