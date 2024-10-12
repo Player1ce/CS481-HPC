@@ -35,8 +35,10 @@ template<typename T>
 void fillWithRandom(T** array, const int rows, const int columns, const int border, const int min = 0, const int max = 1)
 {
     // Create a random number generator
-    std::random_device seed;
-    std::mt19937 generator(seed());
+//    std::random_device seed;
+//    std::mt19937 generator(seed());
+
+    std::mt19937 generator(12345);
 
     // Create a distribution for your desired range
     std::uniform_int_distribution<int> distribution(min, max);
@@ -138,7 +140,10 @@ int main(int argc, char** argv) {
     constexpr int numArrays = 2;
 
     bool writeToFile = false;
-    std::string outputDirectory = "";
+    std::string outputDirectory;
+
+    bool useTestFile = false;
+    std::string testFile;
 
     int numThreads = 5;
 
@@ -174,6 +179,22 @@ int main(int argc, char** argv) {
         numThreads = atoi(argv[3]);
         outputDirectory = argv[4];
         writeToFile = true;
+    }
+    else if (argc == 6) {
+        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << "test file name:" << argv[5] << std::endl;
+        rows = atoi(argv[1]);
+        columns = rows;
+        iterations = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
+        outputDirectory = argv[4];
+        writeToFile = true;
+
+        testFile = argv[5];
+        useTestFile = true;
+    }
+
+    if (rows == columns && columns == 5) {
+        useInitializerList = true;
     }
 
     int printCount = max(iterations / 10, 1);
@@ -272,39 +293,6 @@ int main(int argc, char** argv) {
 
                 _arrays[nextOffset][row][column] = newVal;
 
-//                if (_arrays[offset][row][column]) { // cell was alive in the earlier iteration
-//                    if (value < 2 || value > 3) {
-//                        _arrays[nextOffset][row][column] = 0;
-//                    }
-//                    else // value must be 2 or 3, so no need to check explicitly
-//                        _arrays[nextOffset][row][column] = 1 ; // no change
-//                }
-//                else { // cell was dead in the earlier iteration
-//                    if (value == 3) {
-//                        _arrays[nextOffset][row][column] = 1;
-//                    }
-//                    else
-//                        _arrays[nextOffset][row][column] = 0; // no change
-//                }
-
-//                switch (
-//                        _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] + _arrays[offset][row - 1][column + 1]
-//                        + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-//                        + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] + _arrays[offset][row + 1][column + 1]
-//                        ) {
-//                    case (2):
-//                        _arrays[nextOffset][row][column] = _arrays[offset][row][column];
-//                        continue;
-//                        break;
-//                    case (3):
-//                        _arrays[nextOffset][row][column] = true;
-//                        continue;
-//                        break;
-//                    default:
-//                        _arrays[nextOffset][row][column] = false;
-//                        continue;
-//                        break;
-//                }
             }
 
         }
@@ -343,22 +331,6 @@ int main(int argc, char** argv) {
                 _arrays[nextOffset][row][column] = newVal;
                 colsNoUpdates += oldVal == newVal;
 
-//                if (_arrays[offset][row][column]) { // cell was alive in the earlier iteration
-//                    if (value < 2 || value > 3) {
-//                        _arrays[nextOffset][row][column] = 0;
-//                        flag++; // value changed
-//                    }
-//                    else // value must be 2 or 3, so no need to check explicitly
-//                        _arrays[nextOffset][row][column] = 1 ; // no change
-//                }
-//                else { // cell was dead in the earlier iteration
-//                    if (value == 3) {
-//                        _arrays[nextOffset][row][column] = 1;
-//                        flag++; // value changed
-//                    }
-//                    else
-//                        _arrays[nextOffset][row][column] = 0; // no change
-//                }
             }
             rowsNoUpdates += colsNoUpdates == columns;
             colsNoUpdates = 0;
@@ -463,80 +435,99 @@ int main(int argc, char** argv) {
         for (int row = border; row < rows+border; row++) {
 
 //            windowTracker.resetQueue();
+//            int tracker[3];
+//
+//            tracker[0] = 0;
+//            tracker[1] = 0;
+//            tracker[2] = 0;
+//
+//            int index = 1;
 
-            tracker[0] = 0;
-            tracker[1] = 0;
-            tracker[2] = 0;
-
-            int index = 1;
             int tracker_sum = _arrays[offset][row - 1][border] +
                               _arrays[offset][row]    [border] +
-                              _arrays[offset][row + 1][border];
+                              _arrays[offset][row + 1][border] +
 
-            tracker[0] = tracker_sum;
-
+                              _arrays[offset][row - 1][border + 1] +
+                              _arrays[offset][row]    [border + 1] +
+                              _arrays[offset][row + 1][border + 1];
 
 //            std::cout << std::endl;
 
-            for (int col = border + 1; col < columns+border; col++) {
+            int oldVal = _arrays[offset][row][border];
+            int adjustedSum = tracker_sum - oldVal;
+
+            int newVal = (adjustedSum == 3) ? 1 : (adjustedSum == 2) ? oldVal : 0;
+
+            _arrays[nextOffset][row][border] = newVal;
+
+//            tracker[0] = tracker_sum;
+//            cout << "[s:" << adjustedSum << ",n:" << newVal << "], ";
+
+
+
+            for (int col = border + 2; col < columns + border; col++) {
 
                 // load in the current column (start at two because we write behind)
-                tracker_sum -= tracker[index];
+//                tracker_sum -= tracker[index];
+//                tracker_sum -= ;
 
-                tracker[index] = _arrays[offset][row - 1][col] +
-                                 _arrays[offset][row    ][col] +
-                                 _arrays[offset][row + 1][col];
 
-                tracker_sum += tracker[index];
+//                tracker[index] = _arrays[offset][row - 1][col] +
+//                                 _arrays[offset][row    ][col] +
+//                                 _arrays[offset][row + 1][col];
 
-                index = (index + 1) % 3;
+                tracker_sum += _arrays[offset][row - 1][col] +
+                               _arrays[offset][row]    [col] +
+                               _arrays[offset][row + 1][col]
+                               -
+                                (_arrays[offset][row - 1][col - 3] +
+                                _arrays[offset][row]    [col - 3] +
+                                _arrays[offset][row + 1][col - 3]);
 
-                int current_val = _arrays[offset][row][col-1];
-                int adjusted_sum = tracker_sum - current_val;
 
-                _arrays[nextOffset][row][col - 1] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
+                int oldVal = _arrays[offset][row][col-1];
+                int adjustedSum = tracker_sum - oldVal;
 
-//                switch (tracker_sum - current_val) {
-//                    case (2):
-//                        _arrays[nextOffset][row][col-1] = current_val;
-//                        continue;
-//                        break;
-//                    case (3):
-//                        _arrays[nextOffset][row][col-1] = true;
-//                        continue;
-//                        break;
-//                    default:
-//                        _arrays[nextOffset][row][col-1] = false;
-//                        continue;
-//                        break;
-//                }
+                int newVal = (adjustedSum == 3) ? 1 : (adjustedSum == 2) ? oldVal : 0;
+
+                _arrays[nextOffset][row][col-1] = newVal;
+
+//                cout << "[s:" << adjustedSum << ",n:" << newVal << "], ";
+
+
+//                index = (index + 1) % 3;
+
+//                int current_val = _arrays[offset][row][col-1];
+//                int adjusted_sum = tracker_sum - current_val;
+
             }
 
 
-            tracker_sum -= tracker[index];
+            tracker_sum -= _arrays[offset][row - 1][columns + border - 3] +
+                           _arrays[offset][row]    [columns + border - 3] +
+                           _arrays[offset][row + 1][columns + border - 3];;
 
-            tracker[index] = 0;
-
-            int current_val = _arrays[offset][row][columns + (border - 1)];
-            int adjusted_sum = tracker_sum - current_val;
+//            tracker[index] = 0;
 
 
-            _arrays[nextOffset][row][columns + (border - 1)] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
 
-//            switch (tracker_sum - current_val) {
-//                case (2):
-//                    _arrays[nextOffset][row][columns + (border - 1)] = current_val;
-//                    continue;
-//                    break;
-//                case (3):
-//                    _arrays[nextOffset][row][columns + (border - 1)] = true;
-//                    continue;
-//                    break;
-//                default:
-//                    _arrays[nextOffset][row][columns + (border - 1)] = false;
-//                    continue;
-//                    break;
-//            }
+            oldVal = _arrays[offset][row][columns + border - 1];
+            adjustedSum = tracker_sum - oldVal;
+
+            newVal = (adjustedSum == 3) ? 1 : (adjustedSum == 2) ? oldVal : 0;
+
+            _arrays[nextOffset][row][columns + border - 1] = newVal;
+
+//            cout << "[s:" << adjustedSum << ",n:" << newVal << "], ";
+//            cout << endl;
+
+
+//            int current_val = _arrays[offset][row][columns + (border - 1)];
+//            int adjusted_sum = tracker_sum - current_val;
+//
+//
+//            _arrays[nextOffset][row][columns + (border - 1)] = (adjusted_sum == 2) ? current_val : (adjusted_sum == 3);
+
         }
 //        std::cout << std::endl;
 
@@ -657,7 +648,6 @@ int main(int argc, char** argv) {
                     cout << "[t:" << test.at((i * rows) + j) << ", r:" << (_arrays[offset][i + border][j + border] == 1 ? 1 : 0) << "] ";
                     if (test.at((i * rows) + j) != (_arrays[offset][i + border][j + border] == 1 ? 1 : 0)) {
                         success = false;
-                        break;
                     }
                 }
                 std::cout << std::endl;
@@ -678,13 +668,14 @@ int main(int argc, char** argv) {
         int fileNum = 0;
 
         auto filesInDirectory = file_io::listDirectory(outputDirectory);
-        cout << "Files in dir: ";
-        for (const auto& file : filesInDirectory) {
-            cout << file << " | ";
-        }
-        cout << endl;
 
-        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
+//        cout << "Files in dir: ";
+//        for (const auto& file : filesInDirectory) {
+//            cout << file << " | ";
+//        }
+//        cout << endl;
+
+//        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
 
         while (std::find(filesInDirectory.begin(), filesInDirectory.end(),
                          outputDirectory + fileName.str() + std::to_string(fileNum) + ".txt") != filesInDirectory.end()) {
@@ -699,6 +690,14 @@ int main(int argc, char** argv) {
         } else {
             cout << "Failed to write to file: " << outputDirectory << fileName.str() << endl;
         }
+    }
+
+    if (useTestFile) {
+        std::string fileContents = file_io::readFullFile(outputDirectory + testFile);
+        cout << "file contents: " << endl << fileContents << endl;
+        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
+        bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
+        cout << "Test file was the same: " << success << endl;
     }
 
     for (int i = 0; i < maxOffset; i++) {
