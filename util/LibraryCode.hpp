@@ -23,7 +23,6 @@ namespace util::LibraryCode {
         return grid;
     }
 
-
     template <typename T>
     void deleteArray(T** array) {
         delete[] array[0];

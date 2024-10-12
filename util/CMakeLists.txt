@@ -5,6 +5,7 @@ add_library(Util
     ICellMatrix.cpp
     MultiArrayCellMatrix.cpp
     LibraryCode.cpp
+        FileIO.hpp
 )
 
 target_link_libraries(Util

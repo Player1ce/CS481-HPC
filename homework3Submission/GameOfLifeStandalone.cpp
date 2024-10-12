@@ -1,6 +1,11 @@
-//
-// Created by motst on 10/3/2024.
-//
+/*
+   Name: Marcelo Torres
+   Email: mtorres3@crimson.ua.edu
+   Course Section: CS 481
+   Homework #: 3
+   To Compile: Run ./build.sh in the homework3Submission directory
+   To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads>`
+*/
 
 #include "LibraryCode.hpp"
 
@@ -9,6 +14,7 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
+#include <atomic>
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -57,15 +63,15 @@ int getSum(T** array, const int rows, const int columns, const int border) {
 template<typename T>
 std::string arrayToString(T** array, const int rows, const int columns, const int border ) {
     std::stringstream msg("");
-    msg << "[" << endl;
+    msg << "[" << std::endl;
     for (int i = border; i < rows + border; i++) {
         msg << "[ ";
         for (int j = border; j < columns + border; j++) {
             msg << array[i][j] << " ";
         }
-        msg << "]" << endl;
+        msg << "]" << std::endl;
     }
-    msg << "]" << endl;
+    msg << "]" << std::endl;
     return msg.str();
 }
 
@@ -133,6 +139,9 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
+    bool writeToFile = false;
+    std::string filePath = "";
+
     int numThreads = 5;
 
     if (argc < 2) {
@@ -143,6 +152,7 @@ int main(int argc, char** argv) {
         useInitializerList = true;
         rows = columns = 5;
         iterations = 1;
+        numThreads = 1;
     }
     else if (argc == 3) {
         cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << endl;
@@ -159,11 +169,12 @@ int main(int argc, char** argv) {
 
     }
     else if (argc == 5) {
-        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << " and numThreads: " << argv[4] << endl;
+        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << std::endl;
         rows = atoi(argv[1]);
-        columns = atoi(argv[2]);
-        iterations = atoi(argv[3]);
-        numThreads = atoi(argv[4]);
+        columns = rows;
+        iterations = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
+        filePath = argv[4];
     }
 
     int printCount = max(iterations / 10, 1);
@@ -214,27 +225,34 @@ int main(int argc, char** argv) {
 //#define STANDARD_NO_CHECK
 //#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
-#define STANDARD_CHECK_OMP
+//#define STANDARD_CHECK_OMP
+#define STANDARD_CHECK_OMP_TEST
 //#define WINDOWS
 
     start = chrono::system_clock::now();
 
 //    ThreadPool threadPool(numThreads);
 
-#if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP)
+#if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP) || defined(STANDARD_CHECK_OMP_TEST)
     auto groups = LibraryCode::calculateRowGroups(rows, numThreads);
     int groups_size = groups.size();
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
 #endif
 
 //    constexpr int tracker_size = 3;
-    int tracker[3];
+
+#ifndef STANDARD_CHECK_OMP_TEST
     int currentIteration = 0;
     for (currentIteration = 0; currentIteration < iterations; currentIteration++) {
         // standard_no_check 0.5
         // standard_check 0.8
         // standard_no_check_omp 0.55
         // standard_check_omp: 0.87
+
+        // laptop
+        // standard_nocheck: .935
+        // standard_check_omp_test: 0.89
+
 
         // region standard_no_check
         #ifdef STANDARD_NO_CHECK
@@ -251,14 +269,8 @@ int main(int argc, char** argv) {
                             _arrays[offset][row + 1][column + 1];
 
                 int oldVal = _arrays[offset][row][column];
-                int newVal = 0;
+                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                if (value == 3) {
-                    newVal = 1;
-                }
-                else if (value == 2) {
-                    newVal = oldVal;
-                }
                 _arrays[nextOffset][row][column] = newVal;
 
 //                if (_arrays[offset][row][column]) { // cell was alive in the earlier iteration
@@ -327,15 +339,7 @@ int main(int argc, char** argv) {
                             _arrays[offset][row + 1][column + 1];
 
                 int oldVal = _arrays[offset][row][column];
-                int newVal = 0;
-
-                if (value == 3) {
-                    newVal = 1;
-
-                }
-                else if (value == 2) {
-                    newVal = oldVal;
-                }
+                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
                 _arrays[nextOffset][row][column] = newVal;
                 colsNoUpdates += oldVal == newVal;
@@ -389,15 +393,8 @@ int main(int argc, char** argv) {
                                 _arrays[offset][row + 1][column + 1];
 
                     int oldVal = _arrays[offset][row][column];
-                    int newVal = 0;
+                    int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                    if (value == 3) {
-                        newVal = 1;
-
-                    }
-                    else if (value == 2) {
-                        newVal = oldVal;
-                    }
 
                     _arrays[nextOffset][row][column] = newVal;
                 }
@@ -440,15 +437,8 @@ int main(int argc, char** argv) {
                               _arrays[offset][row + 1][column + 1];
 
                     int oldVal = _arrays[offset][row][column];
-                    int newVal = 0;
+                    int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                    if (value == 3) {
-                        newVal = 1;
-
-                    }
-                    else if (value == 2) {
-                        newVal = oldVal;
-                    }
 
                     _arrays[nextOffset][row][column] = newVal;
                     innerColsNoUpdates += oldVal == newVal;
@@ -568,6 +558,85 @@ int main(int argc, char** argv) {
 //              multiplier++;
 //        }
     }
+
+#else
+
+
+    // region standard_check_omp_test
+#ifdef STANDARD_CHECK_OMP_TEST
+
+    bool exit = false;
+    atomic<int> atomicRowsNoUpdates = 0;
+
+#pragma omp parallel num_threads(numThreads) \
+            default(none) \
+            shared(_arrays, rows, columns, offset, nextOffset, groups, cout, iterations, exit, atomicRowsNoUpdates)
+
+    for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
+
+        int my_rank;
+
+#ifdef _OPENMP
+        my_rank = omp_get_thread_num();
+//            cout << "my rank: " << my_rank << endl;
+#else
+        my_rank = 0;
+#endif
+
+
+        int innerRowsNoUpdates = 0;
+        int innerColsNoUpdates = 0;
+
+//            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
+
+        for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+            for (int column = border; column < columns + border; column++) {
+
+                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                            _arrays[offset][row - 1][column + 1]
+                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                            _arrays[offset][row + 1][column + 1];
+
+                int oldVal = _arrays[offset][row][column];
+                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+
+                _arrays[nextOffset][row][column] = newVal;
+                innerColsNoUpdates += (oldVal == newVal);
+
+//                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+            }
+            innerRowsNoUpdates += (innerColsNoUpdates == columns);
+            innerColsNoUpdates = 0;
+//                cout << endl;
+        }
+
+        atomicRowsNoUpdates += innerRowsNoUpdates;
+
+#pragma omp barrier
+
+#pragma omp single
+        {
+
+            offset = nextOffset;
+            nextOffset = (offset + 1) % (maxOffset + 1);
+
+            if (atomicRowsNoUpdates == rows) {
+                cout << "exiting early on iteration: " << currentIteration + 1 << " because there was no update"
+                     << endl;
+                exit = true;
+            }
+
+            atomicRowsNoUpdates = 0;
+        }
+
+
+    }
+#endif
+    // endregion
+
+
+#endif
 
     end = chrono::system_clock::now();
 

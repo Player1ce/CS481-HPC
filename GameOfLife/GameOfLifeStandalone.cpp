@@ -3,12 +3,14 @@
 //
 
 #include "../util/LibraryCode.hpp"
+#include "../util/FileIO.hpp"
 
 #include <random>
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <chrono>
+#include <algorithm>
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -59,15 +61,15 @@ int getSum(T** array, const int rows, const int columns, const int border) {
 template<typename T>
 std::string arrayToString(T** array, const int rows, const int columns, const int border ) {
     std::stringstream msg("");
-    msg << "[" << endl;
+    msg << "[\n";
     for (int i = border; i < rows + border; i++) {
         msg << "[ ";
         for (int j = border; j < columns + border; j++) {
             msg << array[i][j] << " ";
         }
-        msg << "]" << endl;
+        msg << "]\n";
     }
-    msg << "]" << endl;
+    msg << "]\n";
     return msg.str();
 }
 
@@ -135,6 +137,9 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
+    bool writeToFile = false;
+    std::string outputDirectory = "";
+
     int numThreads = 5;
 
     if (argc < 2) {
@@ -162,11 +167,13 @@ int main(int argc, char** argv) {
 
     }
     else if (argc == 5) {
-        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << " and numThreads: " << argv[4] << endl;
+        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << std::endl;
         rows = atoi(argv[1]);
-        columns = atoi(argv[2]);
-        iterations = atoi(argv[3]);
-        numThreads = atoi(argv[4]);
+        columns = rows;
+        iterations = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
+        outputDirectory = argv[4];
+        writeToFile = true;
     }
 
     int printCount = max(iterations / 10, 1);
@@ -660,6 +667,39 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (writeToFile) {
+        if (outputDirectory.back() != '/') {
+            outputDirectory.append("/");
+        }
+
+        std::stringstream fileName;
+        fileName << "output_" << rows << "x" << columns << "_" << iterations << "_";
+
+        int fileNum = 0;
+
+        auto filesInDirectory = file_io::listDirectory(outputDirectory);
+        cout << "Files in dir: ";
+        for (const auto& file : filesInDirectory) {
+            cout << file << " | ";
+        }
+        cout << endl;
+
+        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
+
+        while (std::find(filesInDirectory.begin(), filesInDirectory.end(),
+                         outputDirectory + fileName.str() + std::to_string(fileNum) + ".txt") != filesInDirectory.end()) {
+            fileNum++;
+        }
+
+        fileName << fileNum << ".txt";
+
+        if (file_io::writeTofile(outputDirectory + fileName.str(),
+                                 {arrayToString(_arrays[offset], rows, columns, border)})) {
+            cout << "successfully wrote output to file: " << outputDirectory << fileName.str() << endl;
+        } else {
+            cout << "Failed to write to file: " << outputDirectory << fileName.str() << endl;
+        }
+    }
 
     for (int i = 0; i < maxOffset; i++) {
         LibraryCode::deleteArray(_arrays[i]);
