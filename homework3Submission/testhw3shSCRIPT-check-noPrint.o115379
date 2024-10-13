@@ -1,0 +1,126 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_hw3.sh
+  The time limit is 3:20:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework3Submission
+  The working directory is:  /scratch-local/ualclsd0201.testhw3shSCRIPT-check-noPrint.115379.asax-pbs1
+  The memory limit is: 1500mb
+  The job will start running after: 202410131502.41
+  Job Name: testhw3shSCRIPT-check-noPrint
+  Queue: -q large
+  Constraints: 
+  Using  28  cores on master node  asax015.asc.edu
+  Node list:  asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu asax015.asc.edu
+  Cores:  28
+  Command typed:
+/scripts/run_script test_hw3.sh     
+  Queue submit command:
+qsub -q large -j oe -N testhw3shSCRIPT-check-noPrint -a 202410131502.41 -r n -M mtorres3@crimson.ua.edu -l walltime=3:20:00 -l select=ncpus=28:mpiprocs=28:mem=1500mb 
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 340.232 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_9.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 337.517 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_10.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 330.104 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_11.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 2 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 167.558 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_12.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 2 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 168.230 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_13.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 2 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 172.236 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_14.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 4 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 87.907 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_15.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 4 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 87.857 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_16.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 4 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 87.827 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_17.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 8 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 46.195 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_18.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 8 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 46.788 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_19.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 8 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 46.263 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_20.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 10 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 39.739 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_21.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 10 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 41.912 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_22.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 10 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 37.717 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_23.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 16 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 49.511 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_24.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 16 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 29.484 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_25.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 16 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 48.716 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_26.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 20 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 40.351 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_27.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 20 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 43.423 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_28.txt
+Test file was the same: true
+percent: 50.0036%
+Using rows: 5000 and iterations: 5000 and numThreads: 20 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 39.26 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_29.txt
+Test file was the same: true
+percent: 50.0036%
