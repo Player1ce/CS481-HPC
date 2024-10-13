@@ -718,7 +718,7 @@ int main(int argc, char** argv) {
         cout << "file contents: " << endl << fileContents << endl;
         cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
         bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
-        cout << "Test file was the same: " << success << endl;
+        cout << "Test file was the same: " << boolalpha << success << endl;
     }
 
     for (int i = 0; i < maxOffset; i++) {
