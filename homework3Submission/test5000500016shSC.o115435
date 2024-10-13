@@ -1,0 +1,26 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_5000-5000-16.sh
+  The time limit is 1:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework3Submission
+  The working directory is:  /scratch-local/ualclsd0201.test5000500016shSC.115435.asax-pbs1
+  The memory limit is: 1500mb
+  The job will start running after: 202410131731.37
+  Job Name: test5000500016shSC
+  Queue: -q large
+  Constraints: 
+  Using  28  cores on master node  asax017.asc.edu
+  Node list:  asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu asax017.asc.edu
+  Cores:  28
+  Command typed:
+/scripts/run_script test_5000-5000-16.sh     
+  Queue submit command:
+qsub -q large -j oe -N test5000500016shSC -a 202410131731.37 -r n -M mtorres3@crimson.ua.edu -l walltime=1:00:00 -l select=ncpus=28:mpiprocs=28:mem=1500mb 
+Using rows: 5000 and iterations: 5000 and numThreads: 16 and filePath: /scratch/ualclsd0201/test file name:output_5000x5000_5000_0.txt
+System took: 36.371 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_30.txt
+Test file was the same: true
+percent: 50.0036%
