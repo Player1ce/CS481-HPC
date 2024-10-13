@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#module load intel
+module load cmake
+module load intel
 
 cmake . -DCMAKE_BUILD_TYPE=Release  -B auto-build
 
