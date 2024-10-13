@@ -120,7 +120,7 @@ namespace util::file_io
      * @return true if there were no exceptions
      */
     static bool appendToFile(const std::string& filePath, const std::string& line) noexcept {
-        appendToFile(filePath, std::vector<std::string>({line}));
+        return appendToFile(filePath, std::vector<std::string>({line}));
     }
 
     /** Checks if a file exists at the given path.
