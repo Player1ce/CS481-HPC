@@ -7,8 +7,8 @@
    To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads>`
 */
 
-#include "../util/LibraryCode.hpp"
-#include "../util/FileIO.hpp"
+#include "LibraryCode.hpp"
+#include "FileIO.hpp"
 
 #ifdef _OPENMP
 # include <omp.h>

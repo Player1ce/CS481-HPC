@@ -152,6 +152,8 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
+    constexpr bool useRandom = false;
+
     bool writeToFile = false;
     std::string outputDirectory;
 
@@ -235,7 +237,7 @@ int main(int argc, char** argv) {
     }
 
     // fill with random
-    fillWithRandom(_arrays[0], rows, columns, border);
+    fillWithRandom(_arrays[0], rows, columns, border, 0, 1, useRandom);
 
     if (useInitializerList) {
         fillFromVector(_arrays[0], rows, columns, initializer, border);
