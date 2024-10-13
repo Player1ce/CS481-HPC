@@ -1,0 +1,155 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_validity.sh
+  The time limit is 1:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework3Submission
+  The working directory is:  /scratch-local/ualclsd0201.testvalidityshSCRI.115380.asax-pbs1
+  The memory limit is: 500mb
+  The job will start running after: 202410131522.11
+  Job Name: testvalidityshSCRI
+  Queue: -q small
+  Constraints: 
+  Using  8  cores on master node  asax006.asc.edu
+  Node list:  asax006.asc.edu asax006.asc.edu asax006.asc.edu asax006.asc.edu asax006.asc.edu asax006.asc.edu asax006.asc.edu asax006.asc.edu
+  Cores:  8
+  Command typed:
+/scripts/run_script test_validity.sh     
+  Queue submit command:
+qsub -q small -j oe -N testvalidityshSCRI -a 202410131522.11 -r n -M mtorres3@crimson.ua.edu -l walltime=1:00:00 -l select=ncpus=8:mpiprocs=8:mem=500mb 
+Using rows: 5 and iterations: 1 and numThreads: 1 and filePath: /scratch/ualclsd0201/
+[
+[ 1 1 0 0 1 ]
+[ 0 1 1 0 0 ]
+[ 1 1 0 0 1 ]
+[ 0 1 1 1 1 ]
+[ 1 1 1 0 1 ]
+]
+
+System took: 0.0 seconds to run
+end matrix 
+[
+[ 1 1 1 0 0 ]
+[ 0 0 1 1 0 ]
+[ 1 0 0 0 1 ]
+[ 0 0 0 0 1 ]
+[ 1 0 0 0 1 ]
+]
+[t:1, r:1] [t:1, r:1] [t:1, r:1] [t:0, r:0] [t:0, r:0] 
+[t:0, r:0] [t:0, r:0] [t:1, r:1] [t:1, r:1] [t:0, r:0] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:0, r:0] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+Success: true
+successfully wrote output to file: /scratch/ualclsd0201/output_5x5_1_0.txt
+percent: 64%
+Using rows: 5 and iterations: 1 and numThreads: 2 and filePath: /scratch/ualclsd0201/test file name:output_5x5_1_0.txt
+[
+[ 1 1 0 0 1 ]
+[ 0 1 1 0 0 ]
+[ 1 1 0 0 1 ]
+[ 0 1 1 1 1 ]
+[ 1 1 1 0 1 ]
+]
+
+System took: 0.0 seconds to run
+end matrix 
+[
+[ 1 1 1 0 0 ]
+[ 0 0 1 1 0 ]
+[ 1 0 0 0 1 ]
+[ 0 0 0 0 1 ]
+[ 1 0 0 0 1 ]
+]
+[t:1, r:1] [t:1, r:1] [t:1, r:1] [t:0, r:0] [t:0, r:0] 
+[t:0, r:0] [t:0, r:0] [t:1, r:1] [t:1, r:1] [t:0, r:0] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:0, r:0] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+Success: true
+successfully wrote output to file: /scratch/ualclsd0201/output_5x5_1_1.txt
+Test file was the same: true
+percent: 64%
+Using rows: 5 and iterations: 1 and numThreads: 3 and filePath: /scratch/ualclsd0201/test file name:output_5x5_1_0.txt
+[
+[ 1 1 0 0 1 ]
+[ 0 1 1 0 0 ]
+[ 1 1 0 0 1 ]
+[ 0 1 1 1 1 ]
+[ 1 1 1 0 1 ]
+]
+
+System took: 0.0 seconds to run
+end matrix 
+[
+[ 1 1 1 0 0 ]
+[ 0 0 1 1 0 ]
+[ 1 0 0 0 1 ]
+[ 0 0 0 0 1 ]
+[ 1 0 0 0 1 ]
+]
+[t:1, r:1] [t:1, r:1] [t:1, r:1] [t:0, r:0] [t:0, r:0] 
+[t:0, r:0] [t:0, r:0] [t:1, r:1] [t:1, r:1] [t:0, r:0] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:0, r:0] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+Success: true
+successfully wrote output to file: /scratch/ualclsd0201/output_5x5_1_2.txt
+Test file was the same: true
+percent: 64%
+Using rows: 5 and iterations: 1 and numThreads: 4 and filePath: /scratch/ualclsd0201/test file name:output_5x5_1_0.txt
+[
+[ 1 1 0 0 1 ]
+[ 0 1 1 0 0 ]
+[ 1 1 0 0 1 ]
+[ 0 1 1 1 1 ]
+[ 1 1 1 0 1 ]
+]
+
+System took: 0.0 seconds to run
+end matrix 
+[
+[ 1 1 1 0 0 ]
+[ 0 0 1 1 0 ]
+[ 1 0 0 0 1 ]
+[ 0 0 0 0 1 ]
+[ 1 0 0 0 1 ]
+]
+[t:1, r:1] [t:1, r:1] [t:1, r:1] [t:0, r:0] [t:0, r:0] 
+[t:0, r:0] [t:0, r:0] [t:1, r:1] [t:1, r:1] [t:0, r:0] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:0, r:0] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+Success: true
+successfully wrote output to file: /scratch/ualclsd0201/output_5x5_1_3.txt
+Test file was the same: true
+percent: 64%
+Using rows: 5 and iterations: 1 and numThreads: 5 and filePath: /scratch/ualclsd0201/test file name:output_5x5_1_0.txt
+[
+[ 1 1 0 0 1 ]
+[ 0 1 1 0 0 ]
+[ 1 1 0 0 1 ]
+[ 0 1 1 1 1 ]
+[ 1 1 1 0 1 ]
+]
+
+System took: 0.0 seconds to run
+end matrix 
+[
+[ 1 1 1 0 0 ]
+[ 0 0 1 1 0 ]
+[ 1 0 0 0 1 ]
+[ 0 0 0 0 1 ]
+[ 1 0 0 0 1 ]
+]
+[t:1, r:1] [t:1, r:1] [t:1, r:1] [t:0, r:0] [t:0, r:0] 
+[t:0, r:0] [t:0, r:0] [t:1, r:1] [t:1, r:1] [t:0, r:0] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:0, r:0] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+[t:1, r:1] [t:0, r:0] [t:0, r:0] [t:0, r:0] [t:1, r:1] 
+Success: true
+successfully wrote output to file: /scratch/ualclsd0201/output_5x5_1_4.txt
+Test file was the same: true
+percent: 64%
