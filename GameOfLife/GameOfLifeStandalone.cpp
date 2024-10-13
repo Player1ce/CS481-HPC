@@ -14,7 +14,6 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
-#include <algorithm>
 #include <atomic>
 
 using namespace std;
