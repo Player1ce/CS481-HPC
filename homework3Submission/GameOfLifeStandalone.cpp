@@ -3,8 +3,10 @@
    Email: mtorres3@crimson.ua.edu
    Course Section: CS 481
    Homework #: 3
-   To Compile: Run ./build.sh in the homework3Submission directory
-   To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads>`
+   To Compile: Run ./build.sh in the homework3Submission directory. NOTE: if you are not running on the HPC, you will
+               need to comment out the lines `module load intel` and `module load cmake` in the build.sh file. You will
+               also need to comment out the line `set(CMAKE_CXX_COMPILER icpx)` in the CMakeLists.txt file.
+   To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
 */
 
 #include "LibraryCode.hpp"
@@ -19,7 +21,6 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
-#include <algorithm>
 #include <atomic>
 
 
