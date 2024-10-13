@@ -2,6 +2,9 @@
 
 set -euxo pipefail
 
+module load intel
+module load cmake
+
 mkdir build
 cd build
 
