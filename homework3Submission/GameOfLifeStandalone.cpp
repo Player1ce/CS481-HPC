@@ -37,21 +37,35 @@ void fillFromVector(T** array, const int rows, const int columns, const vector<b
 }
 
 template<typename T>
-void fillWithRandom(T** array, const int rows, const int columns, const int border, const int min = 0, const int max = 1)
+void fillWithRandom(T** array, const int rows, const int columns, const int border, const int min = 0, const int max = 1, const bool useRandom = true)
 {
     // Create a random number generator
-//    std::random_device seed;
-//    std::mt19937 generator(seed());
 
-    std::mt19937 generator(12345);
+    if (useRandom) {
+        std::random_device seed;
+        std::mt19937 generator(seed());
 
-    // Create a distribution for your desired range
-    std::uniform_int_distribution<int> distribution(min, max);
+        // Create a distribution for your desired range
+        std::uniform_int_distribution<int> distribution(min, max);
 
-    for (int i = border; i < rows + border; i++) {
-        for (int j = border; j < columns + border; j++)
-            array[i][j] = distribution(generator);
+        for (int i = border; i < rows + border; i++) {
+            for (int j = border; j < columns + border; j++)
+                array[i][j] = distribution(generator);
+        }
     }
+    else {
+        std::random_device seed;
+        std::mt19937 generator(12345);
+
+        // Create a distribution for your desired range
+        std::uniform_int_distribution<int> distribution(min, max);
+
+        for (int i = border; i < rows + border; i++) {
+            for (int j = border; j < columns + border; j++)
+                array[i][j] = distribution(generator);
+        }
+    }
+
 }
 
 template <typename T>
@@ -144,6 +158,8 @@ int main(int argc, char** argv) {
     constexpr int border = 1;
     constexpr int numArrays = 2;
 
+    constexpr bool useRandom = false;
+
     bool writeToFile = false;
     std::string outputDirectory;
 
@@ -227,7 +243,7 @@ int main(int argc, char** argv) {
     }
 
     // fill with random
-    fillWithRandom(_arrays[0], rows, columns, border);
+    fillWithRandom(_arrays[0], rows, columns, border, 0, 1, useRandom);
 
     if (useInitializerList) {
         fillFromVector(_arrays[0], rows, columns, initializer, border);
