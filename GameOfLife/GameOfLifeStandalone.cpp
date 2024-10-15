@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
 
     chrono::time_point<chrono::system_clock> start, end;
 
-#define EARLY_STOP_LOGGING
+//#define EARLY_STOP_LOGGING
 
 
 //#define STANDARD_NO_CHECK
@@ -590,9 +590,9 @@ int main(int argc, char** argv) {
 
         for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
 
-
             int innerRowsNoUpdates = 0;
             int innerColsNoUpdates = 0;
+
             for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
                 for (int column = border; column < columns + border; column++) {
 

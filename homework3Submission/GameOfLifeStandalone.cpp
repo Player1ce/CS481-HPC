@@ -139,15 +139,15 @@ auto tester2 = {
 // 10000x10000: 451.659
 
 int main(int argc, char** argv) {
-    initializer = initializer2;
-    test = tester2;
+//    initializer = initializer2;
+//    test = tester2;
 
     int rows = 1000;
     int columns = rows;
 
     int iterations = 1000;
 
-    bool useInitializerList = true;
+    bool useInitializerList = false;
 
     int offset = 0;
     int nextOffset = 1;
@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
 
     chrono::time_point<chrono::system_clock> start, end;
 
-#define EARLY_STOP_LOGGING
+//#define EARLY_STOP_LOGGING
 
 
 //#define STANDARD_NO_CHECK
