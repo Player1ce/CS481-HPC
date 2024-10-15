@@ -9,8 +9,8 @@
    To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
 */
 
-#include "LibraryCode.hpp"
-#include "FileIO.hpp"
+#include "../util/LibraryCode.hpp"
+#include "../util/FileIO.hpp"
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -22,7 +22,6 @@
 #include <vector>
 #include <chrono>
 #include <atomic>
-
 
 using namespace std;
 using namespace util;
@@ -113,11 +112,11 @@ vector<bool> test = {
 };
 
 vector<bool> initializer2 = {
-        false, false, false, false, false,
-        false, false, false, false, false,
+        true, false, false, false, false,
+        false, true, false, false, false,
         false, false, true, false, false,
-        false, false, false, false, false,
-        false, false, false, false, false
+        false, false, false, true, false,
+        false, false, false, false, true
 };
 
 auto tester2 = {
@@ -140,15 +139,15 @@ auto tester2 = {
 // 10000x10000: 451.659
 
 int main(int argc, char** argv) {
-//    initializer = initializer2;
-//    test = tester2;
+    initializer = initializer2;
+    test = tester2;
 
     int rows = 1000;
     int columns = rows;
 
     int iterations = 1000;
 
-    bool useInitializerList = false;
+    bool useInitializerList = true;
 
     int offset = 0;
     int nextOffset = 1;
@@ -186,7 +185,7 @@ int main(int argc, char** argv) {
         iterations = atoi(argv[2]);
     }
     else if (argc == 4) {
-        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << endl;
+        cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << endl;
         rows = atoi(argv[1]);
         columns = rows;
         iterations = atoi(argv[2]);
@@ -203,7 +202,7 @@ int main(int argc, char** argv) {
         writeToFile = true;
     }
     else if (argc == 6) {
-        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << "test file name:" << argv[5] << std::endl;
+        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << " and test file name:" << argv[5] << std::endl;
         rows = atoi(argv[1]);
         columns = rows;
         iterations = atoi(argv[2]);
@@ -263,6 +262,9 @@ int main(int argc, char** argv) {
 
 
     chrono::time_point<chrono::system_clock> start, end;
+
+#define EARLY_STOP_LOGGING
+
 
 //#define STANDARD_NO_CHECK
 //#define STANDARD_CHECK
@@ -575,76 +577,81 @@ int main(int argc, char** argv) {
 
 
     // region standard_check_omp_test
-    #ifdef STANDARD_CHECK_OMP_TEST
+#ifdef STANDARD_CHECK_OMP_TEST
 
     bool exit = false;
     atomic<int> atomicRowsNoUpdates = 0;
 
-    #pragma omp parallel num_threads(numThreads) \
+#pragma omp parallel num_threads(numThreads) \
             default(none) \
             shared(_arrays, rows, columns, offset, nextOffset, groups, cout, iterations, exit, atomicRowsNoUpdates)
-
-    for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
-
+    {
         int my_rank;
 
-        #ifdef _OPENMP
+#ifdef _OPENMP
         my_rank = omp_get_thread_num();
 //            cout << "my rank: " << my_rank << endl;
-        #else
+#else
         my_rank = 0;
-        #endif
+#endif
+
+        for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
 
 
-        int innerRowsNoUpdates = 0;
-        int innerColsNoUpdates = 0;
+            int innerRowsNoUpdates = 0;
+            int innerColsNoUpdates = 0;
+            for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+                for (int column = border; column < columns + border; column++) {
 
-//            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
+                    int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                                _arrays[offset][row - 1][column + 1]
+                                + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                                + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                                _arrays[offset][row + 1][column + 1];
 
-        for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
-            for (int column = border; column < columns + border; column++) {
+                    int oldVal = _arrays[offset][row][column];
+                    int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
-                            _arrays[offset][row - 1][column + 1]
-                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
-                            _arrays[offset][row + 1][column + 1];
-
-                int oldVal = _arrays[offset][row][column];
-                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
-
-                _arrays[nextOffset][row][column] = newVal;
-                innerColsNoUpdates += (oldVal == newVal);
+                    _arrays[nextOffset][row][column] = newVal;
+                    innerColsNoUpdates += (oldVal == newVal);
 
 //                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
-            }
-            innerRowsNoUpdates += (innerColsNoUpdates == columns);
-            innerColsNoUpdates = 0;
+                }
+                innerRowsNoUpdates += (innerColsNoUpdates == columns);
+                innerColsNoUpdates = 0;
 //                cout << endl;
-        }
-
-        atomicRowsNoUpdates += innerRowsNoUpdates;
-
-        #pragma omp barrier
-
-        #pragma omp single
-        {
-
-            offset = nextOffset;
-            nextOffset = (offset + 1) % (maxOffset + 1);
-
-            if (atomicRowsNoUpdates == rows) {
-                cout << "exiting early on iteration: " << currentIteration + 1 << " because there was no update"
-                     << endl;
-                exit = true;
             }
 
-            atomicRowsNoUpdates = 0;
+            atomicRowsNoUpdates += innerRowsNoUpdates;
+
+#pragma omp barrier
+
+#pragma omp single
+            {
+#ifdef EARLY_STOP_LOGGING
+                cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
+#endif
+
+                offset = nextOffset;
+                nextOffset = (offset + 1) % (maxOffset + 1);
+
+                if (atomicRowsNoUpdates == rows) {
+                    cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
+                         << endl;
+                    exit = true;
+                }
+
+#ifdef EARLY_STOP_LOGGING
+                cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
+#endif
+
+                atomicRowsNoUpdates = 0;
+            }
+
+
         }
-
-
     }
-    #endif
+#endif
     // endregion
 
 
@@ -719,7 +726,7 @@ int main(int argc, char** argv) {
 //        cout << "file contents: " << endl << fileContents << endl;
 //        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
         bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
-        cout << "Test file was the same: " << boolalpha << success << endl;
+        cout << "Test file was the same: " << success << endl;
     }
 
     for (int i = 0; i < maxOffset; i++) {

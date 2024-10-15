@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
         iterations = atoi(argv[2]);
     }
     else if (argc == 4) {
-        cout << "Using rows: " << argv[1] << " and columns: " << argv[2] << " and iterations: " << argv[3] << endl;
+        cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << endl;
         rows = atoi(argv[1]);
         columns = rows;
         iterations = atoi(argv[2]);
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
         writeToFile = true;
     }
     else if (argc == 6) {
-        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << "test file name:" << argv[5] << std::endl;
+        cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " << argv[3] << " and filePath: " << argv[4] << " and test file name:" << argv[5] << std::endl;
         rows = atoi(argv[1]);
         columns = rows;
         iterations = atoi(argv[2]);
@@ -255,6 +255,9 @@ int main(int argc, char** argv) {
 
 
     chrono::time_point<chrono::system_clock> start, end;
+
+#define EARLY_STOP_LOGGING
+
 
 //#define STANDARD_NO_CHECK
 //#define STANDARD_CHECK
@@ -575,9 +578,7 @@ int main(int argc, char** argv) {
     #pragma omp parallel num_threads(numThreads) \
             default(none) \
             shared(_arrays, rows, columns, offset, nextOffset, groups, cout, iterations, exit, atomicRowsNoUpdates)
-
-    for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
-
+    {
         int my_rank;
 
         #ifdef _OPENMP
@@ -587,54 +588,61 @@ int main(int argc, char** argv) {
         my_rank = 0;
         #endif
 
+        for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
 
-        int innerRowsNoUpdates = 0;
-        int innerColsNoUpdates = 0;
 
-//            this_thread::sleep_for(chrono::milliseconds(my_rank * 100));
+            int innerRowsNoUpdates = 0;
+            int innerColsNoUpdates = 0;
+            for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+                for (int column = border; column < columns + border; column++) {
 
-        for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
-            for (int column = border; column < columns + border; column++) {
+                    int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                                _arrays[offset][row - 1][column + 1]
+                                + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                                + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                                _arrays[offset][row + 1][column + 1];
 
-                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
-                            _arrays[offset][row - 1][column + 1]
-                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
-                            _arrays[offset][row + 1][column + 1];
+                    int oldVal = _arrays[offset][row][column];
+                    int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                int oldVal = _arrays[offset][row][column];
-                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
-
-                _arrays[nextOffset][row][column] = newVal;
-                innerColsNoUpdates += (oldVal == newVal);
+                    _arrays[nextOffset][row][column] = newVal;
+                    innerColsNoUpdates += (oldVal == newVal);
 
 //                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
-            }
-            innerRowsNoUpdates += (innerColsNoUpdates == columns);
-            innerColsNoUpdates = 0;
+                }
+                innerRowsNoUpdates += (innerColsNoUpdates == columns);
+                innerColsNoUpdates = 0;
 //                cout << endl;
-        }
-
-        atomicRowsNoUpdates += innerRowsNoUpdates;
-
-        #pragma omp barrier
-
-        #pragma omp single
-        {
-
-            offset = nextOffset;
-            nextOffset = (offset + 1) % (maxOffset + 1);
-
-            if (atomicRowsNoUpdates == rows) {
-                cout << "exiting early on iteration: " << currentIteration + 1 << " because there was no update"
-                     << endl;
-                exit = true;
             }
 
-            atomicRowsNoUpdates = 0;
+            atomicRowsNoUpdates += innerRowsNoUpdates;
+
+            #pragma omp barrier
+
+            #pragma omp single
+            {
+                #ifdef EARLY_STOP_LOGGING
+                cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
+                #endif
+
+                offset = nextOffset;
+                nextOffset = (offset + 1) % (maxOffset + 1);
+
+                if (atomicRowsNoUpdates == rows) {
+                    cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
+                         << endl;
+                    exit = true;
+                }
+
+                #ifdef EARLY_STOP_LOGGING
+                cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
+                #endif
+
+                atomicRowsNoUpdates = 0;
+            }
+
+
         }
-
-
     }
     #endif
     // endregion
@@ -708,8 +716,8 @@ int main(int argc, char** argv) {
 
     if (useTestFile) {
         std::string fileContents = file_io::readFullFile(outputDirectory + testFile);
-        cout << "file contents: " << endl << fileContents << endl;
-        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
+//        cout << "file contents: " << endl << fileContents << endl;
+//        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
         bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
         cout << "Test file was the same: " << success << endl;
     }

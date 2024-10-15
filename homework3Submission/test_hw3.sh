@@ -45,3 +45,8 @@ numThreads=20;
 ./Homework3 5000 5000 "$numThreads" "$directory" "$test_file"
 ./Homework3 5000 5000 "$numThreads" "$directory" "$test_file"
 ./Homework3 5000 5000 "$numThreads" "$directory" "$test_file"
+
+for fileNum in {1..21}
+do
+  diff output_5000x5000_5000_"$fileNum".txt test_file
+done
