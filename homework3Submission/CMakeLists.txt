@@ -13,6 +13,6 @@ add_executable(Homework3
         GameOfLifeStandalone.cpp
 )
 
-target_link_libraries(Homework3 PUBLIC
-        OpenMP::OpenMP_CXX
+target_link_libraries(Homework3 
+        PRIVATE OpenMP::OpenMP_CXX
 )

@@ -15,7 +15,6 @@ Instructions to run the program: (for example: ./hw1 <size> <iterations>)
 #include <shared_mutex>
 
 #include "../util/ICellMatrix.hpp"
-//#include "../util/CellMatrix.hpp"
 #include "../util/MultiArrayCellMatrix.hpp"
 #include "../util/ThreadPool.hpp"
 

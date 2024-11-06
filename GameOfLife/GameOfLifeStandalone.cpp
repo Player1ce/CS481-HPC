@@ -47,7 +47,6 @@ void fillWithRandom(T** array, const int rows, const int columns, const int bord
         }
     }
     else {
-        std::random_device seed;
         std::mt19937 generator(12345);
 
         // Create a distribution for your desired range
