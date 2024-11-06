@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
 
 //    ThreadPool threadPool(numThreads);
 
-#ifdef OMP_MODE
+#if defined(OMP_MODE) || defined(MPI_MODE)
     auto groups = LibraryCode::calculateRowGroups(rows, numThreads);
     int groups_size = groups.size();
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
@@ -492,8 +492,8 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    int my_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     // Get the name of the processor
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -502,9 +502,91 @@ int main(int argc, char** argv) {
 
     // Print off a hello world message
     printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, world_rank, world_size);
+           processor_name, my_rank, world_size);
+
+
+    int *sendCounts = new int[groups.size()];
+    int *displacements = new int[groups.size()];
+    int local_sum = 0;
+
+    // TODO: the array needs to be formated as a single block of contiguous memory I think
+
+    for (int i = 0; i < groups.size(); i++) {
+        sendCounts[i] = (groups.at(i).second - groups.at(i).first) * columns;
+        local_sum += sendCounts[i];
+        displacements[i] = local_sum;
+    }
+
+    int recvCount = sendCounts[my_rank];
+
+    int *receiveBuffer = new int[recvCount];
+
+
+    MPI_Scatterv(&_arrays[0], sendCounts, displacements, MPI_INT, receiveBuffer, recvCount, MPI_INT, 0, MPI_COMM_WORLD);
+
+
+    bool exit = false;
+    atomic<int> atomicRowsNoUpdates = 0;
+
+    for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
+
+        int innerRowsNoUpdates = 0;
+        int innerColsNoUpdates = 0;
+
+        for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+            for (int column = border; column < columns + border; column++) {
+
+                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                            _arrays[offset][row - 1][column + 1]
+                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
+                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
+                            _arrays[offset][row + 1][column + 1];
+
+                int oldVal = _arrays[offset][row][column];
+                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+
+                _arrays[nextOffset][row][column] = newVal;
+                innerColsNoUpdates += (oldVal == newVal);
+
+//                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+            }
+            innerRowsNoUpdates += (innerColsNoUpdates == columns);
+            innerColsNoUpdates = 0;
+//                cout << endl;
+        }
+
+        atomicRowsNoUpdates += innerRowsNoUpdates;
+
+#pragma omp barrier
+
+#pragma omp single
+            {
+#ifdef EARLY_STOP_LOGGING
+                cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
+#endif
+
+            offset = nextOffset;
+            nextOffset = (offset + 1) % (maxOffset + 1);
+
+            if (atomicRowsNoUpdates == rows) {
+                cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
+                     << endl;
+                exit = true;
+            }
+
+#ifdef EARLY_STOP_LOGGING
+            cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
+            #endif
+
+            atomicRowsNoUpdates = 0;
+        }
+    }
 
     // Finalize the MPI environment. No more MPI calls can be made after this
+    delete[] sendCounts;
+    delete[] displacements;
+    delete[] receiveBuffer;
+
     MPI_Finalize();
 
     #endif
