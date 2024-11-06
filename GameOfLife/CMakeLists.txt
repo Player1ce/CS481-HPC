@@ -12,7 +12,6 @@ add_executable(GameOfLifeStandalone
 )
 
 target_link_libraries(GameOfLifeStandalone
-    Util
     PRIVATE Util
     PRIVATE OpenMP::OpenMP_CXX
 )
