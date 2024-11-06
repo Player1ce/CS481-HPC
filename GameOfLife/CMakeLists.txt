@@ -16,4 +16,12 @@ target_link_libraries(GameOfLifeStandalone
     PRIVATE OpenMP::OpenMP_CXX
 )
 
+add_executable(GameOfLifeMPI
+        GameOfLifeMPI.cpp
+)
+
+target_link_libraries(GameOfLifeMPI
+        PRIVATE Util
+        PRIVATE MPI::MPI_CXX
+        PRIVATE OpenMP::OpenMP_CXX
 )
