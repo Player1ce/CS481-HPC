@@ -495,26 +495,19 @@ int main(int argc, char** argv) {
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    // Get the name of the processor
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int name_len;
-    MPI_Get_processor_name(processor_name, &name_len);
-
-    // Print off a hello world message
-    printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, my_rank, world_size);
-
 
     int *sendCounts = new int[groups.size()];
     int *displacements = new int[groups.size()];
     int local_sum = 0;
 
+    int numOverlapRows = 2;
+
     // TODO: the array needs to be formated as a single block of contiguous memory I think
 
     for (int i = 0; i < groups.size(); i++) {
-        sendCounts[i] = (groups.at(i).second - groups.at(i).first) * columns;
+        sendCounts[i] = ((groups.at(i).second - groups.at(i).first) * columns) + (numOverlapRows*columns);
         local_sum += sendCounts[i];
-        displacements[i] = local_sum;
+        displacements[i] = local_sum - 1;
     }
 
     int recvCount = sendCounts[my_rank];
@@ -524,16 +517,40 @@ int main(int argc, char** argv) {
 
     MPI_Scatterv(&_arrays[0], sendCounts, displacements, MPI_INT, receiveBuffer, recvCount, MPI_INT, 0, MPI_COMM_WORLD);
 
+    int numRows = groups.at(my_rank).second - groups.at(my_rank).first + numOverlapRows;
+
+    int*** local_arrays = new int**[2];
+
+    for (int i = 0; i < numArrays; i++) {
+        local_arrays[i] = LibraryCode::allocateArray<int>(numRows, columns + 2*border);
+
+        for (int row = 0; row < numRows; row++) {
+            for (int colInset = 0; colInset < border; colInset++) {
+                _arrays[i][row][colInset] = 0;
+                _arrays[i][row][columns - colInset] = 0;
+            }
+        }
+    }
+
+
+    int receiveIndex = 0;
+    for (int i = 0 + 1; i < numRows; i++) {
+        for (int j = border; j < columns; j++) {
+            local_arrays[0][i][j]  = receiveBuffer[receiveIndex];
+
+            receiveIndex++;
+        }
+    }
 
     bool exit = false;
-    atomic<int> atomicRowsNoUpdates = 0;
+
 
     for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
 
-        int innerRowsNoUpdates = 0;
-        int innerColsNoUpdates = 0;
+        rowsNoUpdates = 0;
+        colsNoUpdates = 0;
 
-        for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
+        for (int row = 0 + border; row < numRows + border; row++) {
             for (int column = border; column < columns + border; column++) {
 
                 int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
@@ -546,39 +563,39 @@ int main(int argc, char** argv) {
                 int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
                 _arrays[nextOffset][row][column] = newVal;
-                innerColsNoUpdates += (oldVal == newVal);
+                colsNoUpdates += (oldVal == newVal);
 
 //                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
             }
-            innerRowsNoUpdates += (innerColsNoUpdates == columns);
-            innerColsNoUpdates = 0;
+            rowsNoUpdates += (colsNoUpdates == columns);
+            colsNoUpdates = 0;
 //                cout << endl;
         }
 
-        atomicRowsNoUpdates += innerRowsNoUpdates;
+        //TODO: send edges here
 
-#pragma omp barrier
+        offset = nextOffset;
+        nextOffset = (offset + 1) % (maxOffset + 1);
 
-#pragma omp single
-            {
-#ifdef EARLY_STOP_LOGGING
-                cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
-#endif
+        MPI_Barrier(MPI_COMM_WORLD);
 
-            offset = nextOffset;
-            nextOffset = (offset + 1) % (maxOffset + 1);
+        if (my_rank == 0) {
 
-            if (atomicRowsNoUpdates == rows) {
+            #ifdef EARLY_STOP_LOGGING
+            cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
+            #endif
+
+
+            if (rowsNoUpdates == numRows - numOverlapRows) {
+                // TODO: Send no change signal here and wait for response
                 cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
                      << endl;
                 exit = true;
             }
 
-#ifdef EARLY_STOP_LOGGING
+            #ifdef EARLY_STOP_LOGGING
             cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
             #endif
-
-            atomicRowsNoUpdates = 0;
         }
     }
 
