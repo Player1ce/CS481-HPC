@@ -29,6 +29,95 @@ namespace util::LibraryCode {
         delete[] array;
     }
 
+
+    /// Convert a 2D array to a 1D array and store the result in the given 1D array
+    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
+    /// \tparam T The type for the Array
+    /// \param inputArray The array to convert
+    /// \param outputArray The array to store the data in
+    /// \param rows The number of rows in the original array
+    /// \param cols The number of columns in the original array
+    /// \param borderToRemove If desired, the border to remove from the input array
+    /// \param borderToAdd If desired, the border to add to the output array
+    template<typename T>
+    void convert2Dto1DArray_inPlace(T** inputArray, T* outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        int borderDifference = borderToAdd - borderToRemove;
+        int outputCols = cols + (2 * borderDifference);
+
+        for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
+            for (int inputCol = borderToRemove; inputCol < cols - borderToRemove; inputCol++) {
+                int outputRow = inputRow + borderDifference;
+                int outputCol = inputCol + borderDifference;
+
+                outputArray[(outputRow * outputCols) + outputCol] = inputArray[inputRow][inputCol];
+            }
+        }
+    }
+
+    /// Convert a 2D array to a 1D array and return the new 1D array
+    /// \tparam T The type for the Array
+    /// \param inputArray The array to convert
+    /// \param rows The number of rows in the original array
+    /// \param cols The number of columns in the original array
+    /// \param borderToRemove If desired, the border to remove from the input array
+    /// \param borderToAdd If desired, the border to add to the output array
+    /// \return A new 1D array containing the data originally stored in the 2D array minus any border selected
+    template<typename T>
+    T* convert2Dto1DArray(T** inputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        int borderDifference = borderToAdd - borderToRemove;
+
+        int outputRows = rows + 2*borderDifference;
+        int outputCols = cols + 2*borderDifference;
+
+        T* outputArray = new T[outputRows * outputCols];
+
+        convert2Dto1DArray_inPlace<T>(inputArray, outputArray, rows, cols, borderToRemove, borderToAdd);
+
+        return outputArray;
+    }
+
+    /// Convert a 1D array to a 2D array and store the result in the given 2D array
+    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
+    /// \tparam T The type for the Array
+    /// \param inputArray The array to convert
+    /// \param outputArray The array to store the data in
+    /// \param rows The number of rows in the original array
+    /// \param cols The number of columns in the original array
+    /// \param borderToRemove If desired, the border to remove from the input array
+    template<typename T>
+    void convert1Dto2DArray_inPlace(T* inputArray, T** outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        int borderDifference = borderToAdd - borderToRemove;
+
+        int outputCols = cols + 2 * borderDifference;
+
+        for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
+            int outputRow = inputRow + borderDifference;
+
+            outputArray[outputRow] = &inputArray[inputRow * outputCols];
+        }
+    }
+
+    /// Convert a 1D array to a 2D array and store the result in a new 2D array
+    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
+    /// \tparam T The type for the Array
+    /// \param inputArray The array to convert
+    /// \param rows The number of rows in the original array
+    /// \param cols The number of columns in the original array
+    /// \param borderToRemove If desired, the border to remove from the input array
+    /// \return A new 2D array containing the data originally stored in the 1D array minus any border selected
+    template<typename T>
+    T** convert1Dto2DArray(T* inputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        int borderDifference = borderToAdd - borderToRemove;
+
+        int outputRows = rows + (2 * borderDifference);
+
+        T** outputArray = new T*[outputRows];
+
+        convert1Dto2DArray_inPlace<T>(inputArray, outputArray, rows, cols, borderToRemove, borderToAdd);
+
+        return outputArray;
+    }
+
     std::vector<std::pair<int, int>> calculateRowGroups(const int rows, int numGroups) {
 
         if (numGroups < 0) {

@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 
 //#define STANDARD_CHECK
 //#define STANDARD_CHECK_OMP
-#define STANDARD_CHECK_OMP_TEST
+//#define STANDARD_CHECK_OMP_TEST
 #define STANDARD_CHECK_MPI
 
     start = chrono::system_clock::now();
@@ -426,6 +426,7 @@ int main(int argc, char** argv) {
             int innerRowsNoUpdates = 0;
             int innerColsNoUpdates = 0;
 
+            //TODO: this does not work efficiently if border is not 1 because the overlap between rows will be more than 1 and things will recompute other things
             for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
                 for (int column = border; column < columns + border; column++) {
 
@@ -500,45 +501,46 @@ int main(int argc, char** argv) {
     int *displacements = new int[groups.size()];
     int local_sum = 0;
 
-    int numOverlapRows = 2;
+    int overlapBorder = 1;
+    int overlap = 2*overlapBorder;
+
+    int columnsToSend = columns - (2 * border);
 
     // TODO: the array needs to be formated as a single block of contiguous memory I think
 
     for (int i = 0; i < groups.size(); i++) {
-        sendCounts[i] = ((groups.at(i).second - groups.at(i).first) * columns) + (numOverlapRows*columns);
-        local_sum += sendCounts[i];
-        displacements[i] = local_sum - 1;
+        int rowsToSend = groups.at(i).second - groups.at(i).first + overlap;
+
+        sendCounts[i] = (rowsToSend * (columns - 2 * border));
+        local_sum += sendCounts[i] - overlap;
+        displacements[i] = local_sum - overlapBorder;
     }
 
-    int recvCount = sendCounts[my_rank];
+    int* sendBuffer = LibraryCode::convert2Dto1DArray<int>(_arrays[0], rows, columns, border);
 
+
+    int recvCount = sendCounts[my_rank];
     int *receiveBuffer = new int[recvCount];
 
 
-    MPI_Scatterv(&_arrays[0], sendCounts, displacements, MPI_INT, receiveBuffer, recvCount, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(sendBuffer, sendCounts, displacements, MPI_INT, receiveBuffer, recvCount, MPI_INT, 0, MPI_COMM_WORLD);
 
-    int numRows = groups.at(my_rank).second - groups.at(my_rank).first + numOverlapRows;
+    int numRowsReceived = groups.at(my_rank).second - groups.at(my_rank).first + overlap;
+    int numColsReceived = columnsToSend;
 
     int*** local_arrays = new int**[2];
 
-    for (int i = 0; i < numArrays; i++) {
-        local_arrays[i] = LibraryCode::allocateArray<int>(numRows, columns + 2*border);
+    local_arrays[0] = LibraryCode::convert1Dto2DArray<int>(receiveBuffer, numRowsReceived, numColsReceived, 0, overlapBorder);
 
-        for (int row = 0; row < numRows; row++) {
+    for (int i = 1; i < numArrays; i++) {
+        local_arrays[i] = LibraryCode::allocateArray<int>(numRowsReceived, columns + (2 * border));
+
+        // Initialize the side borders only
+        for (int row = 0; row < numRowsReceived; row++) {
             for (int colInset = 0; colInset < border; colInset++) {
                 _arrays[i][row][colInset] = 0;
                 _arrays[i][row][columns - colInset] = 0;
             }
-        }
-    }
-
-
-    int receiveIndex = 0;
-    for (int i = 0 + 1; i < numRows; i++) {
-        for (int j = border; j < columns; j++) {
-            local_arrays[0][i][j]  = receiveBuffer[receiveIndex];
-
-            receiveIndex++;
         }
     }
 
@@ -550,19 +552,19 @@ int main(int argc, char** argv) {
         rowsNoUpdates = 0;
         colsNoUpdates = 0;
 
-        for (int row = 0 + border; row < numRows + border; row++) {
+        for (int row = overlapBorder; row < numRowsReceived - overlapBorder; row++) {
             for (int column = border; column < columns + border; column++) {
 
-                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
-                            _arrays[offset][row - 1][column + 1]
-                            + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
-                            + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
-                            _arrays[offset][row + 1][column + 1];
+                int value = local_arrays[offset][row - 1][column - 1] + local_arrays[offset][row - 1][column] +
+                            local_arrays[offset][row - 1][column + 1]
+                            + local_arrays[offset][row][column - 1] + local_arrays[offset][row][column + 1]
+                            + local_arrays[offset][row + 1][column - 1] + local_arrays[offset][row + 1][column] +
+                            local_arrays[offset][row + 1][column + 1];
 
-                int oldVal = _arrays[offset][row][column];
+                int oldVal = local_arrays[offset][row][column];
                 int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-                _arrays[nextOffset][row][column] = newVal;
+                local_arrays[nextOffset][row][column] = newVal;
                 colsNoUpdates += (oldVal == newVal);
 
 //                    cout << "[" << row << ", " << column << ", s:" << sum << "] ";
@@ -577,6 +579,7 @@ int main(int argc, char** argv) {
         offset = nextOffset;
         nextOffset = (offset + 1) % (maxOffset + 1);
 
+        // TODO: update this
         MPI_Barrier(MPI_COMM_WORLD);
 
         if (my_rank == 0) {
@@ -586,7 +589,7 @@ int main(int argc, char** argv) {
             #endif
 
 
-            if (rowsNoUpdates == numRows - numOverlapRows) {
+            if (rowsNoUpdates == numRowsReceived - overlap) {
                 // TODO: Send no change signal here and wait for response
                 cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
                      << endl;
@@ -594,10 +597,16 @@ int main(int argc, char** argv) {
             }
 
             #ifdef EARLY_STOP_LOGGING
-            cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
+            cout << arrayToString(local_arrays[offset],  rows, columns, border) << endl;
             #endif
         }
     }
+
+    LibraryCode::convert2Dto1DArray_inPlace(local_arrays[offset], receiveBuffer, numRowsReceived, columns + border * 2, 1);
+
+    MPI_Gatherv(receiveBuffer, sendCounts[my_rank], MPI_INT, sendBuffer, sendCounts, displacements, MPI_INT, 0, MPI_COMM_WORLD);
+
+    LibraryCode::convert1Dto2DArray_inPlace(sendBuffer, _arrays[offset], rows, columns, 0 ,1);
 
     // Finalize the MPI environment. No more MPI calls can be made after this
     delete[] sendCounts;
