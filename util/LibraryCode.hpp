@@ -110,8 +110,9 @@ namespace util::LibraryCode {
         int borderDifference = borderToAdd - borderToRemove;
 
         int outputRows = rows + (2 * borderDifference);
+        int outputCols = cols + (2 * borderDifference);
 
-        T** outputArray = new T*[outputRows];
+        auto outputArray = allocateArray<T>(outputRows, outputCols);
 
         convert1Dto2DArray_inPlace<T>(inputArray, outputArray, rows, cols, borderToRemove, borderToAdd);
 

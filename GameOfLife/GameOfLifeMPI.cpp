@@ -17,8 +17,6 @@
 #include <chrono>
 #include <atomic>
 
-//#include <mpi.h>
-
 using namespace std;
 using namespace util;
 
@@ -504,16 +502,16 @@ int main(int argc, char** argv) {
     int overlapBorder = 1;
     int overlap = 2*overlapBorder;
 
-    int columnsToSend = columns - (2 * border);
+    int columnsToSend = columns;
 
     // TODO: the array needs to be formated as a single block of contiguous memory I think
 
     for (int i = 0; i < groups.size(); i++) {
         int rowsToSend = groups.at(i).second - groups.at(i).first + overlap;
 
-        sendCounts[i] = (rowsToSend * (columns - 2 * border));
-        local_sum += sendCounts[i] - overlap;
-        displacements[i] = local_sum - overlapBorder;
+        sendCounts[i] = (rowsToSend * columns);
+        local_sum += (rowsToSend - overlap) * columns;
+        displacements[i] = local_sum;
     }
 
     int* sendBuffer = LibraryCode::convert2Dto1DArray<int>(_arrays[0], rows, columns, border);
@@ -530,7 +528,15 @@ int main(int argc, char** argv) {
 
     int*** local_arrays = new int**[2];
 
+    // special case for first array
     local_arrays[0] = LibraryCode::convert1Dto2DArray<int>(receiveBuffer, numRowsReceived, numColsReceived, 0, overlapBorder);
+
+    for (int row = 0; row < numRowsReceived; row++) {
+        for (int colInset = 0; colInset < border; colInset++) {
+            local_arrays[0][row][colInset] = 0;
+            local_arrays[0][row][numColsReceived - colInset] = 0;
+        }
+    }
 
     for (int i = 1; i < numArrays; i++) {
         local_arrays[i] = LibraryCode::allocateArray<int>(numRowsReceived, columns + (2 * border));
@@ -538,8 +544,8 @@ int main(int argc, char** argv) {
         // Initialize the side borders only
         for (int row = 0; row < numRowsReceived; row++) {
             for (int colInset = 0; colInset < border; colInset++) {
-                _arrays[i][row][colInset] = 0;
-                _arrays[i][row][columns - colInset] = 0;
+                local_arrays[i][row][colInset] = 0;
+                local_arrays[i][row][columns - colInset] = 0;
             }
         }
     }
@@ -612,6 +618,13 @@ int main(int argc, char** argv) {
     delete[] sendCounts;
     delete[] displacements;
     delete[] receiveBuffer;
+    delete[] sendBuffer;
+
+    for (int i = 0; i < numArrays; i++) {
+        LibraryCode::deleteArray(local_arrays[i]);
+    }
+
+    delete[] local_arrays;
 
     MPI_Finalize();
 
@@ -695,8 +708,9 @@ int main(int argc, char** argv) {
     for (int i = 0; i < maxOffset; i++) {
         LibraryCode::deleteArray(_arrays[i]);
 
-        delete[] _arrays;
     }
+
+    delete[] _arrays;
 
     const double percent = (sum / static_cast<double>(rows*columns)) * 100.0;
     cout << "percent: " << percent << "%" << endl;
