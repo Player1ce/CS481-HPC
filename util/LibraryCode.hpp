@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <vector>
+#include <iostream>
 
 namespace util::LibraryCode {
     template <typename T>
@@ -30,6 +31,7 @@ namespace util::LibraryCode {
     }
 
 
+    //TODO: remove cout statements for production runs
     /// Convert a 2D array to a 1D array and store the result in the given 1D array
     /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
     /// \tparam T The type for the Array
@@ -41,8 +43,34 @@ namespace util::LibraryCode {
     /// \param borderToAdd If desired, the border to add to the output array
     template<typename T>
     void convert2Dto1DArray_inPlace(T** inputArray, T* outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        if (borderToRemove < 0 || borderToAdd < 0)  {
+            std::cout << "Error border to remove less than zero" << std::endl;
+        }
+        if (borderToRemove >= rows || borderToRemove >= cols) {
+            std::cout << "Error border to remove too large" << std::endl;
+        }
+
         int borderDifference = borderToAdd - borderToRemove;
         int outputCols = cols + (2 * borderDifference);
+        int outputRows = rows + (2 * borderDifference);
+
+        // Initialize border elements if needed
+        if (borderToAdd > 0) {
+            // Top and bottom borders
+            for (int i = 0; i < borderToAdd; i++) {
+                for (int j = 0; j < outputCols; j++) {
+                    outputArray[(i * outputCols) + j] = T();
+                    outputArray[((outputRows - 1 - i) * outputCols) + j] = T();
+                }
+            }
+            // Left and right borders
+            for (int i = borderToAdd; i < outputRows - borderToAdd; i++) {
+                for (int j = 0; j < borderToAdd; j++) {
+                    outputArray[(i * outputCols) + j] = T();
+                    outputArray[(i * outputCols) + (outputCols - 1 - j)] = T();
+                }
+            }
+        }
 
         for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
             for (int inputCol = borderToRemove; inputCol < cols - borderToRemove; inputCol++) {
@@ -86,14 +114,44 @@ namespace util::LibraryCode {
     /// \param borderToRemove If desired, the border to remove from the input array
     template<typename T>
     void convert1Dto2DArray_inPlace(T* inputArray, T** outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
+        if (borderToRemove < 0 || borderToAdd < 0)  {
+            std::cout << "Error border to remove less than zero" << std::endl;
+        }
+        if (borderToRemove >= rows || borderToRemove >= cols) {
+            std::cout << "Error border to remove too large" << std::endl;
+        }
+
         int borderDifference = borderToAdd - borderToRemove;
 
-        int outputCols = cols + 2 * borderDifference;
+        int outputCols = cols + (2 * borderDifference);
+        int outputRows = rows + (2*borderDifference);
+
+        if (borderToAdd > 0) {
+            // top and bottom borders
+            for (int row = 0; row < outputRows; row++) {
+                for (int colInset = 0; colInset < borderToAdd; colInset++) {
+                    outputArray[row][colInset] = 0;
+                    outputArray[row][outputCols - colInset - 1] = 0;
+                }
+            }
+
+            for (int col = 0; col < outputCols; col++) {
+                for (int rowInset = 0; rowInset < borderToAdd; rowInset++) {
+                    outputArray[rowInset][col] = 0;
+                    outputArray[outputRows - rowInset - 1][col] = 0;
+                }
+            }
+        }
 
         for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
             int outputRow = inputRow + borderDifference;
 
-            outputArray[outputRow] = &inputArray[inputRow * outputCols];
+            for (int inputCol = borderToRemove; inputCol < cols - borderToRemove; inputCol++) {
+                int outputCol = inputCol + borderDifference;
+                outputArray[outputRow][outputCol] = inputArray[(inputRow * cols) + inputCol];
+            }
+
+            // outputArray[outputRow] = &inputArray[inputRow * outputCols];
         }
     }
 
