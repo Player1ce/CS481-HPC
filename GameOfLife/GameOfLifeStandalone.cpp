@@ -103,6 +103,15 @@ vector<bool> test = {
         true, false, false, false, true,
 };
 
+vector<bool> test_secondIteration = {
+    false, true, true, true, false,
+    true, false, true, true, false,
+    false, false, false, false, true,
+    false, false, false, true, true,
+    false, false, false, false, false,
+};
+
+
 vector<bool> initializer2 = {
         false, false, false, false, false,
         false, false, false, false, false,
@@ -219,17 +228,17 @@ int main(int argc, char** argv) {
         _arrays[i] = LibraryCode::allocateArray<int>(rows + (2 * border), columns + (2 * border));
 
         // Create the border
-        for (int row = 0; row < rows; row++) {
+        for (int row = 0; row < rows + 2 * border; row++) {
             for (int colInset = 0; colInset < border; colInset++) {
                 _arrays[i][row][colInset] = 0;
-                _arrays[i][row][columns - colInset] = 0;
+                _arrays[i][row][columns + border - colInset] = 0;
             }
         }
 
-        for (int col = 0; col < columns; col++) {
+        for (int col = 0; col < columns + 2 * border; col++) {
             for (int rowInset = 0; rowInset < border; rowInset++) {
                 _arrays[i][rowInset][col] = 0;
-                _arrays[i][rows - rowInset][col] = 0;
+                _arrays[i][rows + border - rowInset][col] = 0;
             }
         }
     }
@@ -258,16 +267,15 @@ int main(int argc, char** argv) {
 //#define EARLY_STOP_LOGGING
 
 
-//#define STANDARD_NO_CHECK
+#define STANDARD_NO_CHECK
 //#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
 //#define STANDARD_CHECK_OMP
-#define STANDARD_CHECK_OMP_TEST
+// #define STANDARD_CHECK_OMP_TEST
 //#define WINDOWS
 
-    start = chrono::system_clock::now();
+start = chrono::system_clock::now();
 
-//    ThreadPool threadPool(numThreads);
 
 #if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP) || defined(STANDARD_CHECK_OMP_TEST)
     auto groups = LibraryCode::calculateRowGroups(rows, numThreads);
@@ -275,7 +283,6 @@ int main(int argc, char** argv) {
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
 #endif
 
-//    constexpr int tracker_size = 3;
 
 #ifndef STANDARD_CHECK_OMP_TEST
     int currentIteration = 0;
@@ -298,17 +305,16 @@ int main(int argc, char** argv) {
 
         for (int row = border; row < rows + border; row++) {
             for (int column = border; column < columns + border; column++) {
-                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                int neighbors = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
                             _arrays[offset][row - 1][column + 1]
                             + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
                             + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
                             _arrays[offset][row + 1][column + 1];
 
                 int oldVal = _arrays[offset][row][column];
-                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+                int newVal = (neighbors == 3) ? 1 : (neighbors == 2) ? oldVal : 0;
 
                 _arrays[nextOffset][row][column] = newVal;
-
             }
 
         }
@@ -662,6 +668,10 @@ int main(int argc, char** argv) {
 
     if (useInitializerList) {
         if (rows * columns < printThreshold * printThreshold) {
+            if (iterations == 2) {
+                test = test_secondIteration;
+            }
+
             bool success = true;
 
             for (int i = 0; i < rows; i++) {
