@@ -1,0 +1,481 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_hw4.sh
+  The time limit is 4:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework4Submission
+  The working directory is:  /scratch-local/ualclsd0201.test-hw4-2.207112.asax-pbs1
+  The memory limit is: 2gb
+  The job will start running after: 202411080343.20
+  Job Name: test-hw4-2
+  Queue: -q large
+  Constraints: 
+  Using  19  cores on master node  asax002.asc.edu
+  Node list:  asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax002.asc.edu asax003.asc.edu asax003.asc.edu asax003.asc.edu asax003.asc.edu asax003.asc.edu
+  Cores:  24
+  Command typed:
+/scripts/run_script_mpi test_hw4.sh     
+  Queue submit command:
+qsub -q large -j oe -N test-hw4-2 -a 202411080343.20 -r n -M mtorres3@crimson.ua.edu -l walltime=4:00:00 -l select=24:mpiprocs=1:mem=83mb 
+ 
+
+The following have been reloaded with a version change:
+  1) gcc/11.3.0-o2cd4vz => gcc/12.3.0-rwmy6jl
+  2) gmp/6.2.1-sh44noy => gmp/6.2.1-vio2wnh
+  3) mpc/1.1.0-mheibzt => mpc/1.3.1-4fxtftl
+  4) mpfr/3.1.6-3ojkize => mpfr/4.2.0-hlmrah7
+  5) zstd/1.4.5-44sthnv => zstd/1.4.5
+
+Using rows: 5000 and iterations: 5000 and numThreads: 20 and filePath: /scratch/ualclsd0201/
+System took: 70.32 seconds to run
+Files in dir: /scratch/ualclsd0201/output_5000x5000_5000_12.txt | /scratch/ualclsd0201/output_5000x5000_5000_13.txt | /scratch/ualclsd0201/output_5000x5000_5000_14.txt | /scratch/ualclsd0201/output_5000x5000_5000_15.txt | /scratch/ualclsd0201/output_5000x5000_5000_11.txt | /scratch/ualclsd0201/output_5000x5000_5000_0.txt | /scratch/ualclsd0201/output_5x5_2_0.txt | /scratch/ualclsd0201/output_5x5_2_1.txt | /scratch/ualclsd0201/output_5x5_2_2.txt | /scratch/ualclsd0201/output_5x5_2_3.txt | /scratch/ualclsd0201/output_5x5_2_4.txt | /scratch/ualclsd0201/output_5x5_2_5.txt | /scratch/ualclsd0201/output_5x5_2_6.txt | /scratch/ualclsd0201/output_5x5_2_7.txt | /scratch/ualclsd0201/output_5x5_10_0.txt | /scratch/ualclsd0201/output_5x5_10_1.txt | /scratch/ualclsd0201/output_5x5_10_2.txt | /scratch/ualclsd0201/output_5x5_10_3.txt | /scratch/ualclsd0201/output_5x5_10_4.txt | /scratch/ualclsd0201/output_5000x5000_5000_1.txt | /scratch/ualclsd0201/output_5000x5000_5000_2.txt | /scratch/ualclsd0201/output_5000x5000_5000_3.txt | /scratch/ualclsd0201/output_5000x5000_5000_4.txt | /scratch/ualclsd0201/output_5000x5000_5000_5.txt | /scratch/ualclsd0201/output_5x5_10_5.txt | /scratch/ualclsd0201/output_5x5_10_6.txt | /scratch/ualclsd0201/output_5x5_10_7.txt | /scratch/ualclsd0201/output_5x5_10_8.txt | /scratch/ualclsd0201/output_5x5_10_9.txt | /scratch/ualclsd0201/output_5000x5000_5000_6.txt | /scratch/ualclsd0201/output_5000x5000_5000_7.txt | /scratch/ualclsd0201/output_5000x5000_5000_8.txt | /scratch/ualclsd0201/output_5000x5000_5000_9.txt | /scratch/ualclsd0201/output_5000x5000_5000_10.txt | 
+test: /scratch/ualclsd0201/output_5000x5000_5000_0.txt
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_16.txt
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+Using rows: 5000 and iterations: 5000 and numProcesses: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 352.19 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_17.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+Using rows: 5000 and iterations: 5000 and numProcesses: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 351.913 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_18.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+Using rows: 5000 and iterations: 5000 and numProcesses: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 352.19 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_19.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2684685] 1 more process has sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2684685] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 2 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 177.698 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_20.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2687528] 1 more process has sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2687528] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 2 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 177.182 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_21.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2690311] 1 more process has sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2690311] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 2 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 177.295 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_22.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2693092] 3 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2693092] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 4 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 100.790 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_23.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2694841] 3 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2694841] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 4 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 100.733 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_24.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2696589] 3 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2696589] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 4 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 101.92 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_25.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2698284] 7 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2698284] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 8 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 49.889 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_26.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2699319] 7 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2699319] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 8 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 50.139 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_27.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2700443] 7 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2700443] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 8 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 50.808 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_28.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2701436] 9 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2701436] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 10 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 39.605 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_29.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2702306] 9 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2702306] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 10 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 40.904 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_30.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2703190] 9 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2703190] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 10 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 39.55 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_31.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2704058] 15 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2704058] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 16 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 26.530 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_32.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2704772] 15 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2704772] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 16 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 26.469 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_33.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax002.asc.edu:2705439] 15 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax002.asc.edu:2705439] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using rows: 5000 and iterations: 5000 and numProcesses: 16 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+System took: 26.458 seconds to run
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_34.txt
+Test file was the same: 1
+percent: 50.0036%
+--------------------------------------------------------------------------
+There are not enough slots available in the system to satisfy the 20
+slots that were requested by the application:
+
+  Homework4
+
+Either request fewer slots for your application, or make more slots
+available for use.
+
+A "slot" is the Open MPI term for an allocatable unit where we can
+launch a process.  The number of slots available are defined by the
+environment in which Open MPI processes are run:
+
+  1. Hostfile, via "slots=N" clauses (N defaults to number of
+     processor cores if not provided)
+  2. The --host command line parameter, via a ":N" suffix on the
+     hostname (N defaults to 1 if not provided)
+  3. Resource manager (e.g., SLURM, PBS/Torque, LSF, etc.)
+  4. If none of a hostfile, the --host command line parameter, or an
+     RM is present, Open MPI defaults to the number of processor cores
+
+In all the above cases, if you want Open MPI to default to the number
+of hardware threads instead of the number of processor cores, use the
+--use-hwthread-cpus option.
+
+Alternatively, you can use the --oversubscribe option to ignore the
+number of available slots when deciding the number of processes to
+launch.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+There are not enough slots available in the system to satisfy the 20
+slots that were requested by the application:
+
+  Homework4
+
+Either request fewer slots for your application, or make more slots
+available for use.
+
+A "slot" is the Open MPI term for an allocatable unit where we can
+launch a process.  The number of slots available are defined by the
+environment in which Open MPI processes are run:
+
+  1. Hostfile, via "slots=N" clauses (N defaults to number of
+     processor cores if not provided)
+  2. The --host command line parameter, via a ":N" suffix on the
+     hostname (N defaults to 1 if not provided)
+  3. Resource manager (e.g., SLURM, PBS/Torque, LSF, etc.)
+  4. If none of a hostfile, the --host command line parameter, or an
+     RM is present, Open MPI defaults to the number of processor cores
+
+In all the above cases, if you want Open MPI to default to the number
+of hardware threads instead of the number of processor cores, use the
+--use-hwthread-cpus option.
+
+Alternatively, you can use the --oversubscribe option to ignore the
+number of available slots when deciding the number of processes to
+launch.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+There are not enough slots available in the system to satisfy the 20
+slots that were requested by the application:
+
+  Homework4
+
+Either request fewer slots for your application, or make more slots
+available for use.
+
+A "slot" is the Open MPI term for an allocatable unit where we can
+launch a process.  The number of slots available are defined by the
+environment in which Open MPI processes are run:
+
+  1. Hostfile, via "slots=N" clauses (N defaults to number of
+     processor cores if not provided)
+  2. The --host command line parameter, via a ":N" suffix on the
+     hostname (N defaults to 1 if not provided)
+  3. Resource manager (e.g., SLURM, PBS/Torque, LSF, etc.)
+  4. If none of a hostfile, the --host command line parameter, or an
+     RM is present, Open MPI defaults to the number of processor cores
+
+In all the above cases, if you want Open MPI to default to the number
+of hardware threads instead of the number of processor cores, use the
+--use-hwthread-cpus option.
+
+Alternatively, you can use the --oversubscribe option to ignore the
+number of available slots when deciding the number of processes to
+launch.
+--------------------------------------------------------------------------
+Files /scratch/ualclsd0201/output_5000x5000_5000_1.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_2.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_3.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_4.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_5.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_6.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_7.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_8.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_9.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_10.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_11.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_12.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_13.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_14.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_15.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_16.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_17.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_18.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_19.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_20.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Files /scratch/ualclsd0201/output_5000x5000_5000_21.txt and /scratch/ualclsd0201/output_5000x5000_5000_0.txt are identical
+Cgroup memsw limit exceeded: 
