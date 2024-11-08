@@ -139,9 +139,16 @@ auto tester2 = {
 
 
 //#define EARLY_STOP_LOGGING
-#define MPI_DEBUG_LOGGING
+//#define MPI_DEBUG_LOGGING
 
 #define STANDARD_CHECK_MPI
+#define STANDARD_CHECK_MPI_NONBLOCKING
+
+// Tests on 1000x1000 boards for 1000 iterations with 1 thread
+
+// Laptop
+// STANDARD_CHECK_MPI: 1.89
+
 
 int main(int argc, char **argv) {
     MPI_Init(NULL, NULL);
@@ -298,28 +305,29 @@ int main(int argc, char **argv) {
         start = chrono::system_clock::now();
     }
 
-    // region STANDARD_CHECK_MPI
-    #ifdef STANDARD_CHECK_MPI
-
     auto groups = LibraryCode::calculateRowGroups(rows, world_size);
+
+    #ifdef MPI_DEBUG_LOGGING
     if (my_rank == 0) {
         cout << "world_size: " << world_size << endl;
     }
-    int groups_size = groups.size();
-    numThreads = (groups_size < world_size ? groups_size : world_size);
+    #endif
 
     // every process
     int *secondSendBuffer = nullptr;
     int *receiveBuffer = nullptr;
 
     int *rowSendBuffer = nullptr;
-    int *rowRecieveBuffer = nullptr;
+    int *rowReceiveBuffer = nullptr;
 
     // root only
     int *sendCounts = nullptr;
     int *displacements = nullptr;
     int *sendBuffer = nullptr;
     int *secondReceiveBuffer = nullptr;
+
+    // region STANDARD_CHECK_MPI
+    #ifdef STANDARD_CHECK_MPI
 
     int overlapBorder = 1;
     int overlap = 2 * overlapBorder;
@@ -393,11 +401,11 @@ int main(int argc, char **argv) {
     #endif
 
     rowSendBuffer = new int[numColsReceived];
-    rowRecieveBuffer = new int[numColsReceived];
+    rowReceiveBuffer = new int[numColsReceived];
 
     for (int i = 0; i < numColsReceived; i++) {
         rowSendBuffer[i] = 0;
-        rowRecieveBuffer[i] = 0;
+        rowReceiveBuffer[i] = 0;
     }
 
     int ***local_arrays = new int **[numArrays];
@@ -491,7 +499,7 @@ int main(int argc, char **argv) {
 
         // receive lower row
         if (my_rank != world_size - 1) {
-            MPI_Recv(rowRecieveBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             #ifdef MPI_DEBUG_LOGGING
             cout << "Process " << my_rank << ": " << "print rowReceiveBuffer" << endl;
@@ -503,7 +511,7 @@ int main(int argc, char **argv) {
             #endif
 
             for (int col = 0; col < numColsReceived; col++) {
-                local_arrays[nextOffset][numRowsReceived - 1][col] = rowRecieveBuffer[col];
+                local_arrays[nextOffset][numRowsReceived - 1][col] = rowReceiveBuffer[col];
             }
         }
 
@@ -527,7 +535,7 @@ int main(int argc, char **argv) {
 
         // receive upper row
         if (my_rank != 0) {
-            MPI_Recv(rowRecieveBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             #ifdef MPI_DEBUG_LOGGING
             cout << "Process " << my_rank << ": " << "print rowReceiveBuffer2" << endl;
@@ -539,7 +547,7 @@ int main(int argc, char **argv) {
             #endif
 
             for (int col = 0; col < numColsReceived; col++) {
-                local_arrays[nextOffset][0][col] = rowRecieveBuffer[col];
+                local_arrays[nextOffset][0][col] = rowReceiveBuffer[col];
             }
         }
 
@@ -592,6 +600,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    #ifdef MPI_DEBUG_LOGGING
     cout << "Process " << my_rank << ": " << "print the secondSendBuffer" << endl;
     for (int i = 0; i < numRowsReceived - overlap; i++) {
         cout << "[";
@@ -600,6 +609,7 @@ int main(int argc, char **argv) {
         }
         cout << "]" << endl;
     }
+    #endif
 
     // adjust sendCounts
     if (my_rank == 0) {
@@ -627,6 +637,7 @@ int main(int argc, char **argv) {
 
 
     if (my_rank == 0) {
+        #ifdef MPI_DEBUG_LOGGING
         cout << "print the secondReceiveBuffer" << endl;
         for (int i = 0; i < rows; i++) {
             cout << "[";
@@ -635,17 +646,19 @@ int main(int argc, char **argv) {
             }
             cout << "]" << endl;
         }
+        #endif
 
-        cout << "print the array" << endl;
         for (int row = border; row < rows + border; row++) {
-            cout << "[";
             for (int column = 0; column < numColsReceived; column++) {
-                cout << " " << secondReceiveBuffer[((row - border) * numColsReceived) + column];
                 _arrays[0][row][column] = secondReceiveBuffer[((row - border) * numColsReceived) + column];
             }
-            cout << " ]" << endl;
         }
+
+        #ifdef MPI_DEBUG_LOGGING
+        cout << "Print array" << endl;
         cout << arrayToString(_arrays[0], rows, columns, border) << endl;
+        #endif
+
         offset = 0;
     }
 
@@ -659,7 +672,7 @@ int main(int argc, char **argv) {
     delete[] receiveBuffer;
     delete[] secondSendBuffer;
     delete[] rowSendBuffer;
-    delete[] rowRecieveBuffer;
+    delete[] rowReceiveBuffer;
 
     for (int i = 0; i < numArrays; i++) {
         if (local_arrays[i] != nullptr) {
@@ -672,6 +685,12 @@ int main(int argc, char **argv) {
     #endif
     // endregion
 
+
+    // region STANDARD_CHECK_MPI_NONBLOCKING
+    #ifdef STANDARD_CHECK_MPI_NONBLOCKING
+
+
+    #endif
 
     MPI_Finalize();
 
