@@ -5,7 +5,7 @@ Name: Marcelo Torres
     Homework #: 4
     To Compile: Run ./build.sh in the homework4Submission directory. NOTE: if you are not running on the HPC, you will
                need to comment out the lines `module load intel` and `module load cmake`  and `module  load  openmpi/4.1.4-gcc11` in the build.sh file.
-    To Run: Run ./Homework4 in the homework4Submission directory. Use `./Homework4 <board_size> <max_iterations> <num_processes> <output_directory(absolute or relative)> <test_file>`
+    To Run: Run ./Homework4 in the homework4Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
 */
 
 #include "LibraryCode.hpp"

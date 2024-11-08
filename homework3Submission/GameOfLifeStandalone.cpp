@@ -1,16 +1,15 @@
 /*
-   Name: Marcelo Torres
-   Email: mtorres3@crimson.ua.edu
-   Course Section: CS 481
-   Homework #: 3
-   To Compile: Run ./build.sh in the homework3Submission directory. NOTE: if you are not running on the HPC, you will
-               need to comment out the lines `module load intel` and `module load cmake` in the build.sh file. You will
-               also need to comment out the line `set(CMAKE_CXX_COMPILER icpx)` in the CMakeLists.txt file.
-   To Run: Run ./Homework3 in the homework3Submission directory. Use `./Homework3 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
+Name: Marcelo Torres
+    Email: mtorres3@crimson.ua.edu
+    Course Section: CS 481
+    Homework #: 3
+    To Compile: Run ./build.sh in the homework4Submission directory. NOTE: if you are not running on the HPC, you will
+               need to comment out the lines `module load intel` and `module load cmake` in the build.sh file.
+    To Run: Run ./Homework4 in the homework4Submission directory. Use `./Homework4 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
 */
 
-#include "../util/LibraryCode.hpp"
-#include "../util/FileIO.hpp"
+#include "LibraryCode.hpp"
+#include "FileIO.hpp"
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -54,7 +53,6 @@ void fillWithRandom(T** array, const int rows, const int columns, const int bord
         }
     }
     else {
-        std::random_device seed;
         std::mt19937 generator(12345);
 
         // Create a distribution for your desired range
@@ -111,12 +109,21 @@ vector<bool> test = {
         true, false, false, false, true,
 };
 
+vector<bool> test_secondIteration = {
+    false, true, true, true, false,
+    true, false, true, true, false,
+    false, false, false, false, true,
+    false, false, false, true, true,
+    false, false, false, false, false,
+};
+
+
 vector<bool> initializer2 = {
-        true, false, false, false, false,
-        false, true, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
         false, false, true, false, false,
-        false, false, false, true, false,
-        false, false, false, false, true
+        false, false, false, false, false,
+        false, false, false, false, false
 };
 
 auto tester2 = {
@@ -227,17 +234,17 @@ int main(int argc, char** argv) {
         _arrays[i] = LibraryCode::allocateArray<int>(rows + (2 * border), columns + (2 * border));
 
         // Create the border
-        for (int row = 0; row < rows; row++) {
+        for (int row = 0; row < rows + 2 * border; row++) {
             for (int colInset = 0; colInset < border; colInset++) {
                 _arrays[i][row][colInset] = 0;
-                _arrays[i][row][columns - colInset] = 0;
+                _arrays[i][row][columns + border - colInset] = 0;
             }
         }
 
-        for (int col = 0; col < columns; col++) {
+        for (int col = 0; col < columns + 2 * border; col++) {
             for (int rowInset = 0; rowInset < border; rowInset++) {
                 _arrays[i][rowInset][col] = 0;
-                _arrays[i][rows - rowInset][col] = 0;
+                _arrays[i][rows + border - rowInset][col] = 0;
             }
         }
     }
@@ -270,12 +277,11 @@ int main(int argc, char** argv) {
 //#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
 //#define STANDARD_CHECK_OMP
-#define STANDARD_CHECK_OMP_TEST
+ #define STANDARD_CHECK_OMP_TEST
 //#define WINDOWS
 
-    start = chrono::system_clock::now();
+start = chrono::system_clock::now();
 
-//    ThreadPool threadPool(numThreads);
 
 #if defined(STANDARD_NO_CHECK_OMP) || defined(STANDARD_CHECK_OMP) || defined(STANDARD_CHECK_OMP_TEST)
     auto groups = LibraryCode::calculateRowGroups(rows, numThreads);
@@ -283,11 +289,12 @@ int main(int argc, char** argv) {
     numThreads = (groups_size < numThreads ? groups_size : numThreads);
 #endif
 
-//    constexpr int tracker_size = 3;
 
 #ifndef STANDARD_CHECK_OMP_TEST
     int currentIteration = 0;
     for (currentIteration = 0; currentIteration < iterations; currentIteration++) {
+        // tested on 1000x1000 for 1000 iterations with 1 thread
+
         // standard_no_check 0.5
         // standard_check 0.8
         // standard_no_check_omp 0.55
@@ -306,17 +313,16 @@ int main(int argc, char** argv) {
 
         for (int row = border; row < rows + border; row++) {
             for (int column = border; column < columns + border; column++) {
-                int value = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
+                int neighbors = _arrays[offset][row - 1][column - 1] + _arrays[offset][row - 1][column] +
                             _arrays[offset][row - 1][column + 1]
                             + _arrays[offset][row][column - 1] + _arrays[offset][row][column + 1]
                             + _arrays[offset][row + 1][column - 1] + _arrays[offset][row + 1][column] +
                             _arrays[offset][row + 1][column + 1];
 
                 int oldVal = _arrays[offset][row][column];
-                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+                int newVal = (neighbors == 3) ? 1 : (neighbors == 2) ? oldVal : 0;
 
                 _arrays[nextOffset][row][column] = newVal;
-
             }
 
         }
@@ -577,29 +583,29 @@ int main(int argc, char** argv) {
 
 
     // region standard_check_omp_test
-#ifdef STANDARD_CHECK_OMP_TEST
+    #ifdef STANDARD_CHECK_OMP_TEST
 
     bool exit = false;
     atomic<int> atomicRowsNoUpdates = 0;
 
-#pragma omp parallel num_threads(numThreads) \
+    #pragma omp parallel num_threads(numThreads) \
             default(none) \
             shared(_arrays, rows, columns, offset, nextOffset, groups, cout, iterations, exit, atomicRowsNoUpdates)
     {
         int my_rank;
 
-#ifdef _OPENMP
+        #ifdef _OPENMP
         my_rank = omp_get_thread_num();
 //            cout << "my rank: " << my_rank << endl;
-#else
+        #else
         my_rank = 0;
-#endif
+        #endif
 
         for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
 
-
             int innerRowsNoUpdates = 0;
             int innerColsNoUpdates = 0;
+
             for (int row = groups.at(my_rank).first + border; row < groups.at(my_rank).second + border; row++) {
                 for (int column = border; column < columns + border; column++) {
 
@@ -624,13 +630,13 @@ int main(int argc, char** argv) {
 
             atomicRowsNoUpdates += innerRowsNoUpdates;
 
-#pragma omp barrier
+            #pragma omp barrier
 
-#pragma omp single
+            #pragma omp single
             {
-#ifdef EARLY_STOP_LOGGING
+                #ifdef EARLY_STOP_LOGGING
                 cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
-#endif
+                #endif
 
                 offset = nextOffset;
                 nextOffset = (offset + 1) % (maxOffset + 1);
@@ -641,9 +647,9 @@ int main(int argc, char** argv) {
                     exit = true;
                 }
 
-#ifdef EARLY_STOP_LOGGING
+                #ifdef EARLY_STOP_LOGGING
                 cout << arrayToString(_arrays[offset],  rows, columns, border) << endl;
-#endif
+                #endif
 
                 atomicRowsNoUpdates = 0;
             }
@@ -651,7 +657,7 @@ int main(int argc, char** argv) {
 
         }
     }
-#endif
+    #endif
     // endregion
 
 
@@ -670,6 +676,10 @@ int main(int argc, char** argv) {
 
     if (useInitializerList) {
         if (rows * columns < printThreshold * printThreshold) {
+            if (iterations == 2) {
+                test = test_secondIteration;
+            }
+
             bool success = true;
 
             for (int i = 0; i < rows; i++) {
@@ -698,13 +708,13 @@ int main(int argc, char** argv) {
 
         auto filesInDirectory = file_io::listDirectory(outputDirectory);
 
-//        cout << "Files in dir: ";
-//        for (const auto& file : filesInDirectory) {
-//            cout << file << " | ";
-//        }
-//        cout << endl;
+        cout << "Files in dir: ";
+        for (const auto& file : filesInDirectory) {
+            cout << file << " | ";
+        }
+        cout << endl;
 
-//        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
+        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
 
         while (std::find(filesInDirectory.begin(), filesInDirectory.end(),
                          outputDirectory + fileName.str() + std::to_string(fileNum) + ".txt") != filesInDirectory.end()) {
