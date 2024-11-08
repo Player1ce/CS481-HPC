@@ -1,0 +1,18 @@
+ 
+============================================================
+=====     Queued job information at submit time        =====
+============================================================
+  The submitted file is: test_early_stop.sh
+  The time limit is 1:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework4Submission
+  The memory limit is: 1gb
+  The job will start running after: 202411080321.07
+  Job Name: testearlystopshSCR
+  Queue: -q small
+  Constraints: 
+  Command typed:
+/scripts/run_script_mpi test_early_stop.sh     
+  Queue submit command:
+qsub -q small -j oe -N testearlystopshSCR -a 202411080321.07 -r n -M mtorres3@crimson.ua.edu -l walltime=1:00:00 -l select=6:mpiprocs=1:mem=166mb 
+  Job number: 207111
+ 
