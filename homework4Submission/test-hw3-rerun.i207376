@@ -1,0 +1,18 @@
+ 
+============================================================
+=====     Queued job information at submit time        =====
+============================================================
+  The submitted file is: test_hw3.sh
+  The time limit is 4:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework4Submission
+  The memory limit is: 5gb
+  The job will start running after: 202411081514.02
+  Job Name: test-hw3-rerun
+  Queue: -q large
+  Constraints: 
+  Command typed:
+/scripts/run_script test_hw3.sh     
+  Queue submit command:
+qsub -q large -j oe -N test-hw3-rerun -a 202411081514.02 -r n -M mtorres3@crimson.ua.edu -l walltime=4:00:00 -l select=ncpus=28:mpiprocs=28:mem=5000mb 
+  Job number: 207376
+ 
