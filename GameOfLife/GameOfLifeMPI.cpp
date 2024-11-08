@@ -15,7 +15,6 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
-#include <atomic>
 
 using namespace std;
 using namespace util;
@@ -139,10 +138,10 @@ auto tester2 = {
 
 
 //#define EARLY_STOP_LOGGING
-//#define MPI_DEBUG_LOGGING
+// #define MPI_DEBUG_LOGGING
 
 #define STANDARD_CHECK_MPI
-#define STANDARD_CHECK_MPI_NONBLOCKING
+// #define STANDARD_CHECK_MPI_NONBLOCKING
 
 // Tests on 1000x1000 boards for 1000 iterations with 1 thread
 
@@ -166,8 +165,8 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     // initialize variables ----------------------------------------
-    initializer = initializer2;
-    test = tester2;
+    // initializer = initializer2;
+    // test = tester2;
 
     int rows = 1000;
     int columns = rows;
@@ -691,6 +690,405 @@ int main(int argc, char **argv) {
 
     // region STANDARD_CHECK_MPI_NONBLOCKING
     #ifdef STANDARD_CHECK_MPI_NONBLOCKING
+
+    int overlapBorder = 1;
+    int overlap = 2 * overlapBorder;
+
+    int columnsToSend = columns + 2 * border;
+    int rowsToSend;
+
+    int my_recvCount = 0;
+    int my_sendCount = 0;
+
+    if (my_rank == 0) {
+        sendCounts = new int[groups.size()];
+        displacements = new int[groups.size()];
+
+        int local_sum = 0;
+        for (int i = 0; i < groups.size(); i++) {
+            rowsToSend = groups.at(i).second - groups.at(i).first + overlap;
+
+            sendCounts[i] = ((rowsToSend) * columnsToSend);
+            displacements[i] = local_sum;
+            local_sum += sendCounts[i] - (overlap * columnsToSend);
+        }
+
+        rowsToSend = groups.at(0).second - groups.at(0).first + overlap;
+        my_recvCount = sendCounts[0];
+    } else {
+        rowsToSend = groups.at(my_rank).second - groups.at(my_rank).first + overlap;
+
+        my_recvCount = (rowsToSend * columnsToSend);
+        my_sendCount = my_recvCount;
+    }
+
+    if (my_rank == 0) {
+        sendBuffer = new int[(rows + 2 * border) * (columns + 2 * border)];
+
+        for (int row = 0; row < rows + 2 * border; row++) {
+            for (int col = 0; col < columns + 2 * border; col++) {
+                sendBuffer[row * (columns + 2 * border) + col] = _arrays[0][row][col];
+            }
+        }
+
+        #ifdef MPI_DEBUG_LOGGING
+        cout << "print the sendBuffer" << endl;
+        for (int i = 0; i < rows + 2 * border; i++) {
+            cout << "[";
+            for (int j = 0; j < columns + 2 * border; j++) {
+                cout << sendBuffer[i * (columns + 2 * border) + j] << " ";
+            }
+            cout << "]" << endl;
+        }
+        #endif
+    }
+
+    receiveBuffer = new int[my_recvCount];
+
+    MPI_Scatterv(sendBuffer, sendCounts, displacements, MPI_INT, receiveBuffer, my_recvCount, MPI_INT, 0,
+                 MPI_COMM_WORLD);
+
+
+    int numRowsReceived = groups.at(my_rank).second - groups.at(my_rank).first + overlap;
+    #ifdef MPI_DEBUG_LOGGING
+    cout << "Process " << my_rank << ": " << "numRowsReceived = " << numRowsReceived << endl;
+    cout << "Process " << my_rank << ": " << "group first: " << groups.at(my_rank).first << ", group second: " << groups
+            .at(my_rank).second << endl;
+    #endif
+
+    int numColsReceived = columnsToSend;
+
+    #ifdef MPI_DEBUG_LOGGING
+    cout << "Process " << my_rank << ": " << "numColsReceived = " << numColsReceived << endl;
+    #endif
+
+    rowSendBuffer = new int[numColsReceived];
+    rowReceiveBuffer = new int[numColsReceived];
+
+    for (int i = 0; i < numColsReceived; i++) {
+        rowSendBuffer[i] = 0;
+        rowReceiveBuffer[i] = 0;
+    }
+
+    int ***local_arrays = new int **[numArrays];
+
+    // special case for first array, because borders are sent through mpi
+    local_arrays[0] = LibraryCode::allocateArray<int>(numRowsReceived, numColsReceived);
+
+    for (int i = 1; i < numArrays; i++) {
+        local_arrays[i] = LibraryCode::allocateArray<int>(numRowsReceived, numColsReceived);
+
+        // Initialize the borders
+        for (int row = 0; row < numRowsReceived; row++) {
+            for (int colInset = 0; colInset < border; colInset++) {
+                local_arrays[i][row][colInset] = 0;
+                local_arrays[i][row][numColsReceived - colInset - 1] = 0;
+            }
+        }
+
+        for (int col = 0; col < numColsReceived; col++) {
+            for (int rowInset = 0; rowInset < border; rowInset++) {
+                local_arrays[i][rowInset][col] = 0;
+                local_arrays[i][numRowsReceived - rowInset - 1][col] = 0;
+            }
+        }
+    }
+
+    // copy received data to local array
+    for (int row = 0; row < numRowsReceived; row++) {
+        for (int col = 0; col < numColsReceived; col++) {
+            local_arrays[0][row][col] = receiveBuffer[(row * numColsReceived) + col];
+        }
+    }
+
+    #ifdef MPI_DEBUG_LOGGING
+    cout << "Process " << my_rank << ": " << "print local_arrays[0]" << endl;
+    for (int i = 0; i < numRowsReceived; i++) {
+        cout << "[";
+        for (int j = 0; j < numColsReceived; j++) {
+            cout << local_arrays[0][i][j] << " ";
+        }
+        cout << "]" << endl;
+    }
+    #endif
+
+    int exit = 0;
+
+
+    for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
+        rowsNoUpdates = 0;
+        colsNoUpdates = 0;
+
+        for (int row = overlapBorder; row < numRowsReceived - overlapBorder; row++) {
+            for (int column = border; column < numColsReceived - border; column++) {
+                int value = local_arrays[offset][row - 1][column - 1] + local_arrays[offset][row - 1][column] +
+                            local_arrays[offset][row - 1][column + 1]
+                            + local_arrays[offset][row][column - 1] + local_arrays[offset][row][column + 1]
+                            + local_arrays[offset][row + 1][column - 1] + local_arrays[offset][row + 1][column] +
+                            local_arrays[offset][row + 1][column + 1];
+
+                int oldVal = local_arrays[offset][row][column];
+                int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+
+                local_arrays[nextOffset][row][column] = newVal;
+                colsNoUpdates += (oldVal == newVal);
+
+                // cout << "[" << row << ", " << column << ", s:" << sum << "] ";
+            }
+            rowsNoUpdates += (colsNoUpdates == columns);
+            colsNoUpdates = 0;
+            // cout << endl;
+        }
+
+        MPI_Request sendTopRow, sendBottomRow, recvTopRow, recvBottomRow;
+        MPI_Status status;
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+        // cout << "Process " << my_rank << ": " << "print nextoffset localArray" << endl;
+        // cout << arrayToString(local_arrays[nextOffset], numRowsReceived, numColsReceived, 0) << endl;
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+        // send Edges
+        // send upper row
+        if (my_rank != 0) {
+            for (int col = 0; col < numColsReceived; col++) {
+                rowSendBuffer[col] = local_arrays[nextOffset][1][col];
+            }
+
+            #ifdef MPI_DEBUG_LOGGING
+            cout << "Process " << my_rank << ": " << "print rowSendBuffer" << endl;
+            cout << "[";
+            for (int i = 0; i < numColsReceived; i++) {
+                cout << " " << rowSendBuffer[i];
+            }
+            cout << "]" << endl;
+            #endif
+
+            MPI_Isend(rowSendBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, &sendTopRow);
+        }
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+        // send lower row
+        if (my_rank != world_size - 1) {
+            for (int col = 0; col < numColsReceived; col++) {
+                rowSendBuffer[col] = local_arrays[nextOffset][numRowsReceived - 2][col];
+            }
+
+            #ifdef MPI_DEBUG_LOGGING
+            cout << "Process " << my_rank << ": " << "print rowSendBuffer2" << endl;
+            cout << "[";
+            for (int i = 0; i < numColsReceived; i++) {
+                cout << " " << rowSendBuffer[i];
+            }
+            cout << "]" << endl;
+            #endif
+
+            MPI_Isend(rowSendBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, &sendBottomRow);
+        }
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+
+        // receive lower row
+        if (my_rank != world_size - 1) {
+            MPI_Irecv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, &recvBottomRow);
+        }
+
+        // receive upper row
+        if (my_rank != 0) {
+            MPI_Irecv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, &recvTopRow);
+        }
+
+
+        int noUpdate = rowsNoUpdates == numRowsReceived - overlap;
+        MPI_Allreduce(&noUpdate, &exit, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        // TODO: fix early stop check
+        if (exit) {
+            #ifdef EARLY_STOP_LOGGING
+            cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
+            #endif
+
+            if (my_rank == 0) {
+                cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update" << endl;
+            }
+
+            MPI_Cancel(&sendBottomRow);
+            MPI_Cancel(&sendTopRow);
+            MPI_Cancel(&recvBottomRow);
+            MPI_Cancel(&recvTopRow);
+
+            MPI_Wait(&sendBottomRow, MPI_STATUS_IGNORE);
+            MPI_Wait(&sendTopRow, MPI_STATUS_IGNORE);
+            MPI_Wait(&recvBottomRow, MPI_STATUS_IGNORE);
+            MPI_Wait(&recvTopRow, MPI_STATUS_IGNORE);
+
+            offset = nextOffset;
+            nextOffset = (offset + 1) % (maxOffset + 1);
+
+            break;
+
+            #ifdef EARLY_STOP_LOGGING
+            cout << arrayToString(local_arrays[offset],  rows, columns, border) << endl;
+            #endif
+        }
+
+
+        // receive lower row
+        if (my_rank != world_size - 1) {
+            MPI_Wait(&sendBottomRow, &status);
+            MPI_Wait(&recvBottomRow, &status);
+
+            #ifdef MPI_DEBUG_LOGGING
+            cout << "Process " << my_rank << ": " << "print rowReceiveBuffer" << endl;
+            cout << "[";
+            for (int i = 0; i < numColsReceived; i++) {
+                cout << " " << rowReceiveBuffer[i];
+            }
+            cout << "]" << endl;
+            #endif
+
+            for (int col = 0; col < numColsReceived; col++) {
+                local_arrays[nextOffset][numRowsReceived - 1][col] = rowReceiveBuffer[col];
+            }
+        }
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+        // receive upper row
+        if (my_rank != 0) {
+            MPI_Wait(&sendTopRow, &status);
+            MPI_Wait(&sendTopRow, &status);
+
+            #ifdef MPI_DEBUG_LOGGING
+            cout << "Process " << my_rank << ": " << "print rowReceiveBuffer2" << endl;
+            cout << "[";
+            for (int i = 0; i < numColsReceived; i++) {
+                cout << " " << rowReceiveBuffer[i];
+            }
+            cout << "]" << endl;
+            #endif
+
+            for (int col = 0; col < numColsReceived; col++) {
+                local_arrays[nextOffset][0][col] = rowReceiveBuffer[col];
+            }
+        }
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+
+
+        #ifdef MPI_DEBUG_LOGGING
+        cout << "Process " << my_rank << ": " << "print local_arrays[nextOffset] updated" << endl;
+        for (int i = 0; i < numRowsReceived; i++) {
+            cout << "[";
+            for (int j = 0; j < numColsReceived; j++) {
+                cout << local_arrays[nextOffset][i][j] << " ";
+            }
+            cout << "]" << endl;
+        }
+        #endif
+
+
+        offset = nextOffset;
+        nextOffset = (offset + 1) % (maxOffset + 1);
+    }
+
+    secondSendBuffer = new int[(numRowsReceived - overlap) * numColsReceived];
+
+    // populate second send buffer
+    for (int row = overlapBorder; row < numRowsReceived - overlapBorder; row++) {
+        secondSendBuffer[((row - 1) * numColsReceived)] = 0;
+        secondSendBuffer[((row - 1) * numColsReceived) + numColsReceived - border] = 0;
+
+        for (int column = border; column < numColsReceived - border; column++) {
+            secondSendBuffer[((row - 1) * numColsReceived) + column] = local_arrays[offset][row][column];
+        }
+    }
+
+    #ifdef MPI_DEBUG_LOGGING
+    cout << "Process " << my_rank << ": " << "print the secondSendBuffer" << endl;
+    for (int i = 0; i < numRowsReceived - overlap; i++) {
+        cout << "[";
+        for (int j = 0; j < numColsReceived; j++) {
+            cout << secondSendBuffer[(i * numColsReceived) + j] << " ";
+        }
+        cout << "]" << endl;
+    }
+    #endif
+
+    // adjust sendCounts
+    if (my_rank == 0) {
+        int local_sum = 0;
+        for (int i = 0; i < groups.size(); i++) {
+            rowsToSend = groups.at(i).second - groups.at(i).first;
+
+            sendCounts[i] = (rowsToSend * numColsReceived);
+            displacements[i] = local_sum;
+            local_sum += sendCounts[i];
+        }
+
+        rowsToSend = groups.at(0).second - groups.at(0).first;
+        my_sendCount = sendCounts[0];
+
+        secondReceiveBuffer = new int[(rows) * numColsReceived];
+    } else {
+        rowsToSend = groups.at(my_rank).second - groups.at(my_rank).first;
+        my_sendCount = (rowsToSend * numColsReceived);
+    }
+
+
+    MPI_Gatherv(secondSendBuffer, my_sendCount, MPI_INT, secondReceiveBuffer, sendCounts, displacements, MPI_INT, 0,
+                MPI_COMM_WORLD);
+
+
+    if (my_rank == 0) {
+        #ifdef MPI_DEBUG_LOGGING
+        cout << "print the secondReceiveBuffer" << endl;
+        for (int i = 0; i < rows; i++) {
+            cout << "[";
+            for (int j = 0; j < numColsReceived; j++) {
+                cout << secondReceiveBuffer[(i * numColsReceived) + j] << " ";
+            }
+            cout << "]" << endl;
+        }
+        #endif
+
+        for (int row = border; row < rows + border; row++) {
+            for (int column = 0; column < numColsReceived; column++) {
+                _arrays[0][row][column] = secondReceiveBuffer[((row - border) * numColsReceived) + column];
+            }
+        }
+
+        #ifdef MPI_DEBUG_LOGGING
+        cout << "Print array" << endl;
+        cout << arrayToString(_arrays[0], rows, columns, border) << endl;
+        #endif
+
+        offset = 0;
+    }
+
+    // Finalize the MPI environment. No more MPI calls can be made after this
+    if (my_rank == 0) {
+        delete[] sendCounts;
+        delete[] displacements;
+        delete[] sendBuffer;
+        delete[] secondReceiveBuffer;
+    }
+    delete[] receiveBuffer;
+    delete[] secondSendBuffer;
+    delete[] rowSendBuffer;
+    delete[] rowReceiveBuffer;
+
+    for (int i = 0; i < numArrays; i++) {
+        if (local_arrays[i] != nullptr) {
+            LibraryCode::deleteArray(local_arrays[i]);
+        }
+    }
+
+    delete[] local_arrays;
 
 
     #endif
