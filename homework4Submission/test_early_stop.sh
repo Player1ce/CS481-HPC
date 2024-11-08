@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#module load intel
-#module load openmpi/4.1.4-gcc11
+module load intel
+module load openmpi/4.1.4-gcc11
 
-#directory='/scratch/ualclsd0201/'
-directory='validation/'
+directory='/scratch/ualclsd0201/'
+#directory='validation/'
 test_file='output_5x5_10_0.txt'
 
 numThreads=1;
