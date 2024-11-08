@@ -162,8 +162,8 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     // initialize variables ----------------------------------------
-    //    initializer = initializer2;
-    //    test = tester2;
+    initializer = initializer2;
+    test = tester2;
 
     int rows = 1000;
     int columns = rows;
@@ -450,7 +450,7 @@ int main(int argc, char **argv) {
     }
     #endif
 
-    bool exit = false;
+    int exit = 0;
 
 
     for (int currentIteration = 0; currentIteration < iterations && !exit; currentIteration++) {
@@ -477,6 +477,8 @@ int main(int argc, char **argv) {
             colsNoUpdates = 0;
             // cout << endl;
         }
+
+        // send Edges
 
 
         // send upper row
@@ -565,22 +567,19 @@ int main(int argc, char **argv) {
         offset = nextOffset;
         nextOffset = (offset + 1) % (maxOffset + 1);
 
-        // TODO: update this
-        MPI_Barrier(MPI_COMM_WORLD);
+
+        // MPI_Barrier(MPI_COMM_WORLD);
+
+        int noUpdate = rowsNoUpdates == numRowsReceived - overlap;
+        MPI_Allreduce(&noUpdate, &exit, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
         // TODO: fix early stop check
-        if (my_rank == 0) {
+        if (my_rank == 0 && exit) {
             #ifdef EARLY_STOP_LOGGING
             cout << "Iteration: " << currentIteration + 1 << ", rows without updates: " << atomicRowsNoUpdates << endl;
             #endif
 
-
-            if (rowsNoUpdates == numRowsReceived - overlap) {
-                // TODO: Send no change signal here and wait for response
-                cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update"
-                        << endl;
-                exit = true;
-            }
+            cout << "Exiting early on iteration: " << currentIteration + 1 << " because there was no update" << endl;
 
             #ifdef EARLY_STOP_LOGGING
             cout << arrayToString(local_arrays[offset],  rows, columns, border) << endl;
