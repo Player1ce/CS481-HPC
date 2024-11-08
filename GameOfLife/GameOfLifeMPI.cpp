@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
         iterations = atoi(argv[2]);
     } else if (argc == 4) {
         if (my_rank == 0)
-            cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " <<
+            cout << "Using size: " << argv[1] << " and iterations: " << argv[2] << " and numProcesses: " <<
                     argv[3] << endl;
         rows = atoi(argv[1]);
         columns = rows;
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
         numThreads = atoi(argv[3]);
     } else if (argc == 5) {
         if (my_rank == 0)
-            cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " <<
+            cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numProcesses: " <<
                     argv[3] << " and filePath: " << argv[4] << std::endl;
         rows = atoi(argv[1]);
         columns = rows;
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
         writeToFile = true;
     } else if (argc == 6) {
         if (my_rank == 0)
-            cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numThreads: " <<
+            cout << "Using rows: " << argv[1] << " and iterations: " << argv[2] << " and numProcesses: " <<
                     argv[3] << " and filePath: " << argv[4] << " and test file name:" << argv[5] << std::endl;
         rows = atoi(argv[1]);
         columns = rows;
@@ -246,7 +246,14 @@ int main(int argc, char **argv) {
 
     if (rows == columns && columns == 5) {
         useInitializerList = true;
+
+        // special case to test for early stop
+        if (iterations == 10) {
+            initializer = initializer2;
+            test = tester2;
+        }
     }
+
 
     if (world_size > rows) {
         cout << "ERROR: cannot have more processes than rows in the grid." << endl;
@@ -484,11 +491,12 @@ int main(int argc, char **argv) {
         // send Edges
 
 
-        // send upper row
+        // exchange upper row
         if (my_rank != 0) {
             for (int col = 0; col < numColsReceived; col++) {
                 rowSendBuffer[col] = local_arrays[nextOffset][1][col];
             }
+            MPI_Sendrecv(rowSendBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, rowReceiveBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             #ifdef MPI_DEBUG_LOGGING
             cout << "Process " << my_rank << ": " << "print rowSendBuffer" << endl;
@@ -499,32 +507,20 @@ int main(int argc, char **argv) {
             cout << "]" << endl;
             #endif
 
-            MPI_Send(rowSendBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD);
-        }
-
-        // receive lower row
-        if (my_rank != world_size - 1) {
-            MPI_Recv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-            #ifdef MPI_DEBUG_LOGGING
-            cout << "Process " << my_rank << ": " << "print rowReceiveBuffer" << endl;
-            cout << "[";
-            for (int i = 0; i < numColsReceived; i++) {
-                cout << " " << rowRecieveBuffer[i];
-            }
-            cout << "]" << endl;
-            #endif
-
             for (int col = 0; col < numColsReceived; col++) {
-                local_arrays[nextOffset][numRowsReceived - 1][col] = rowReceiveBuffer[col];
+                local_arrays[nextOffset][0][col] = rowReceiveBuffer[col];
             }
+
+            // MPI_Send(rowSendBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD);
         }
 
-        // send lower row
+        // exchange lower row
         if (my_rank != world_size - 1) {
             for (int col = 0; col < numColsReceived; col++) {
                 rowSendBuffer[col] = local_arrays[nextOffset][numRowsReceived - 2][col];
             }
+
+            MPI_Sendrecv(rowSendBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, rowReceiveBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             #ifdef MPI_DEBUG_LOGGING
             cout << "Process " << my_rank << ": " << "print rowSendBuffer2" << endl;
@@ -535,25 +531,11 @@ int main(int argc, char **argv) {
             cout << "]" << endl;
             #endif
 
-            MPI_Send(rowSendBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-        }
-
-        // receive upper row
-        if (my_rank != 0) {
-            MPI_Recv(rowReceiveBuffer, numColsReceived, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-            #ifdef MPI_DEBUG_LOGGING
-            cout << "Process " << my_rank << ": " << "print rowReceiveBuffer2" << endl;
-            cout << "[";
-            for (int i = 0; i < numColsReceived; i++) {
-                cout << " " << rowRecieveBuffer[i];
-            }
-            cout << "]" << endl;
-            #endif
-
             for (int col = 0; col < numColsReceived; col++) {
-                local_arrays[nextOffset][0][col] = rowReceiveBuffer[col];
+                local_arrays[nextOffset][numRowsReceived - 1][col] = rowReceiveBuffer[col];
             }
+
+            // MPI_Send(rowSendBuffer, numColsReceived, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
         }
 
         #ifdef MPI_DEBUG_LOGGING
@@ -936,6 +918,8 @@ int main(int argc, char **argv) {
             #endif
         }
 
+
+        //TODO: this doesn't work because the send buffer is updated in the second send. Need to add another buffer for sending and receiving
 
         // receive lower row
         if (my_rank != world_size - 1) {
