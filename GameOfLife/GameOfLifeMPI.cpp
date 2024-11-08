@@ -291,9 +291,12 @@ int main(int argc, char **argv) {
 
 
     // region STANDARD_CHECK_MPI
-#ifdef STANDARD_CHECK_MPI
+    #ifdef STANDARD_CHECK_MPI
 
     auto groups = LibraryCode::calculateRowGroups(rows, world_size);
+    if (my_rank == 0) {
+        cout << "world_size: " << world_size << endl;
+    }
     int groups_size = groups.size();
     numThreads = (groups_size < world_size ? groups_size : world_size);
 
@@ -367,12 +370,12 @@ int main(int argc, char **argv) {
 
 
     int numRowsReceived = groups.at(my_rank).second - groups.at(my_rank).first + overlap;
-    // cout << "Process " << my_rank << ": " << "numRowsReceived = " << numRowsReceived << endl;
-    // cout << "Process " << my_rank << ": " << "group first: " << groups.at(my_rank).first << ", group second: " << groups
-    //         .at(my_rank).second << endl;
+     cout << "Process " << my_rank << ": " << "numRowsReceived = " << numRowsReceived << endl;
+     cout << "Process " << my_rank << ": " << "group first: " << groups.at(my_rank).first << ", group second: " << groups
+             .at(my_rank).second << endl;
 
     int numColsReceived = columnsToSend;
-    // cout << "Process " << my_rank << ": " << "numColsReceived = " << numColsReceived << endl;
+     cout << "Process " << my_rank << ": " << "numColsReceived = " << numColsReceived << endl;
 
 
     rowSendBuffer = new int[numColsReceived];

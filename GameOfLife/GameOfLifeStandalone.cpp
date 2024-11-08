@@ -267,11 +267,11 @@ int main(int argc, char** argv) {
 //#define EARLY_STOP_LOGGING
 
 
-#define STANDARD_NO_CHECK
+//#define STANDARD_NO_CHECK
 //#define STANDARD_CHECK
 //#define STANDARD_NO_CHECK_OMP
 //#define STANDARD_CHECK_OMP
-// #define STANDARD_CHECK_OMP_TEST
+ #define STANDARD_CHECK_OMP_TEST
 //#define WINDOWS
 
 start = chrono::system_clock::now();
