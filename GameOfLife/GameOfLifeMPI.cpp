@@ -149,6 +149,10 @@ auto tester2 = {
 // Laptop
 // STANDARD_CHECK_MPI: 1.89
 
+// Desktop
+// STANDARD_CHECK_OMP_TEST: 0.84
+// STANDARD_CHECK_MPI: 0.89
+
 
 int main(int argc, char **argv) {
     MPI_Init(NULL, NULL);
