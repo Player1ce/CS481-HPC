@@ -287,6 +287,8 @@ start = chrono::system_clock::now();
 #ifndef STANDARD_CHECK_OMP_TEST
     int currentIteration = 0;
     for (currentIteration = 0; currentIteration < iterations; currentIteration++) {
+        // tested on 1000x1000 for 1000 iterations with 1 thread
+
         // standard_no_check 0.5
         // standard_check 0.8
         // standard_no_check_omp 0.55

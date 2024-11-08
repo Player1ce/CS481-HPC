@@ -30,153 +30,6 @@ namespace util::LibraryCode {
         delete[] array;
     }
 
-
-    //TODO: remove cout statements for production runs
-    /// Convert a 2D array to a 1D array and store the result in the given 1D array
-    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
-    /// \tparam T The type for the Array
-    /// \param inputArray The array to convert
-    /// \param outputArray The array to store the data in
-    /// \param rows The number of rows in the original array
-    /// \param cols The number of columns in the original array
-    /// \param borderToRemove If desired, the border to remove from the input array
-    /// \param borderToAdd If desired, the border to add to the output array
-    template<typename T>
-    void convert2Dto1DArray_inPlace(T** inputArray, T* outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
-        if (borderToRemove < 0 || borderToAdd < 0)  {
-            std::cout << "Error border to remove less than zero" << std::endl;
-        }
-        if (borderToRemove >= rows || borderToRemove >= cols) {
-            std::cout << "Error border to remove too large" << std::endl;
-        }
-
-        int borderDifference = borderToAdd - borderToRemove;
-        int outputCols = cols + (2 * borderDifference);
-        int outputRows = rows + (2 * borderDifference);
-
-        // Initialize border elements if needed
-        if (borderToAdd > 0) {
-            // Top and bottom borders
-            for (int i = 0; i < borderToAdd; i++) {
-                for (int j = 0; j < outputCols; j++) {
-                    outputArray[(i * outputCols) + j] = T();
-                    outputArray[((outputRows - 1 - i) * outputCols) + j] = T();
-                }
-            }
-            // Left and right borders
-            for (int i = borderToAdd; i < outputRows - borderToAdd; i++) {
-                for (int j = 0; j < borderToAdd; j++) {
-                    outputArray[(i * outputCols) + j] = T();
-                    outputArray[(i * outputCols) + (outputCols - 1 - j)] = T();
-                }
-            }
-        }
-
-        for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
-            for (int inputCol = borderToRemove; inputCol < cols - borderToRemove; inputCol++) {
-                int outputRow = inputRow + borderDifference;
-                int outputCol = inputCol + borderDifference;
-
-                outputArray[(outputRow * outputCols) + outputCol] = inputArray[inputRow][inputCol];
-            }
-        }
-    }
-
-    /// Convert a 2D array to a 1D array and return the new 1D array
-    /// \tparam T The type for the Array
-    /// \param inputArray The array to convert
-    /// \param rows The number of rows in the original array
-    /// \param cols The number of columns in the original array
-    /// \param borderToRemove If desired, the border to remove from the input array
-    /// \param borderToAdd If desired, the border to add to the output array
-    /// \return A new 1D array containing the data originally stored in the 2D array minus any border selected
-    template<typename T>
-    T* convert2Dto1DArray(T** inputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
-        int borderDifference = borderToAdd - borderToRemove;
-
-        int outputRows = rows + 2*borderDifference;
-        int outputCols = cols + 2*borderDifference;
-
-        T* outputArray = new T[outputRows * outputCols];
-
-        convert2Dto1DArray_inPlace<T>(inputArray, outputArray, rows, cols, borderToRemove, borderToAdd);
-
-        return outputArray;
-    }
-
-    /// Convert a 1D array to a 2D array and store the result in the given 2D array
-    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
-    /// \tparam T The type for the Array
-    /// \param inputArray The array to convert
-    /// \param outputArray The array to store the data in
-    /// \param rows The number of rows in the original array
-    /// \param cols The number of columns in the original array
-    /// \param borderToRemove If desired, the border to remove from the input array
-    template<typename T>
-    void convert1Dto2DArray_inPlace(T* inputArray, T** outputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
-        if (borderToRemove < 0 || borderToAdd < 0)  {
-            std::cout << "Error border to remove less than zero" << std::endl;
-        }
-        if (borderToRemove >= rows || borderToRemove >= cols) {
-            std::cout << "Error border to remove too large" << std::endl;
-        }
-
-        int borderDifference = borderToAdd - borderToRemove;
-
-        int outputCols = cols + (2 * borderDifference);
-        int outputRows = rows + (2*borderDifference);
-
-        if (borderToAdd > 0) {
-            // top and bottom borders
-            for (int row = 0; row < outputRows; row++) {
-                for (int colInset = 0; colInset < borderToAdd; colInset++) {
-                    outputArray[row][colInset] = 0;
-                    outputArray[row][outputCols - colInset - 1] = 0;
-                }
-            }
-
-            for (int col = 0; col < outputCols; col++) {
-                for (int rowInset = 0; rowInset < borderToAdd; rowInset++) {
-                    outputArray[rowInset][col] = 0;
-                    outputArray[outputRows - rowInset - 1][col] = 0;
-                }
-            }
-        }
-
-        for (int inputRow = borderToRemove; inputRow < rows - borderToRemove; inputRow++) {
-            int outputRow = inputRow + borderDifference;
-
-            for (int inputCol = borderToRemove; inputCol < cols - borderToRemove; inputCol++) {
-                int outputCol = inputCol + borderDifference;
-                outputArray[outputRow][outputCol] = inputArray[(inputRow * cols) + inputCol];
-            }
-
-            // outputArray[outputRow] = &inputArray[inputRow * outputCols];
-        }
-    }
-
-    /// Convert a 1D array to a 2D array and store the result in a new 2D array
-    /// \note if you wish to add border to the new array, increase the rows or columns over the size of the original array.
-    /// \tparam T The type for the Array
-    /// \param inputArray The array to convert
-    /// \param rows The number of rows in the original array
-    /// \param cols The number of columns in the original array
-    /// \param borderToRemove If desired, the border to remove from the input array
-    /// \return A new 2D array containing the data originally stored in the 1D array minus any border selected
-    template<typename T>
-    T** convert1Dto2DArray(T* inputArray, const int rows, const int cols, const int borderToRemove = 0, const int borderToAdd = 0) {
-        int borderDifference = borderToAdd - borderToRemove;
-
-        int outputRows = rows + (2 * borderDifference);
-        int outputCols = cols + (2 * borderDifference);
-
-        auto outputArray = allocateArray<T>(outputRows, outputCols);
-
-        convert1Dto2DArray_inPlace<T>(inputArray, outputArray, rows, cols, borderToRemove, borderToAdd);
-
-        return outputArray;
-    }
-
     std::vector<std::pair<int, int>> calculateRowGroups(const int rows, int numGroups) {
 
         if (numGroups < 0) {
@@ -189,20 +42,17 @@ namespace util::LibraryCode {
 
         int groupSize = rows/numGroups;
         int overhang = rows%numGroups;
-        int previousOverhang = 0;
         int allocatedOverhang = 0;
 
         std::vector<std::pair<int, int>> rowGroups(numGroups);
 
         for (int i = 0; i < numGroups; i++) {
-            rowGroups.at(i) = std::make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
+            int firstElement = i*groupSize + allocatedOverhang;
+            rowGroups.at(i) = std::make_pair(firstElement, firstElement + groupSize);
 
             if (i < overhang) {
                 rowGroups.at(i).second += 1;
-                previousOverhang = 1;
                 allocatedOverhang++;
-            } else {
-                previousOverhang = 0;
             }
         }
 

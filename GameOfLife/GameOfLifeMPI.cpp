@@ -233,6 +233,18 @@ int main(int argc, char **argv) {
         useInitializerList = true;
     }
 
+    // if (my_rank > rows - 1) {
+    //     cout << "ERROR: cannot have more processes than rows in the grid." << endl;
+    //     MPI_Abort(MPI_COMM_WORLD, 1);
+    //     return 0;
+    // }
+
+    if (world_size > rows) {
+        cout << "ERROR: cannot have more processes than rows in the grid." << endl;
+        MPI_Abort(MPI_COMM_WORLD, 1);
+        return 1;
+    }
+
     int printCount = max(iterations / 10, 1);
 
     if (my_rank == 0) {
@@ -283,12 +295,13 @@ int main(int argc, char **argv) {
 
 #define STANDARD_CHECK_MPI
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     chrono::time_point<chrono::system_clock> start, end;
 
     if (my_rank == 0) {
         start = chrono::system_clock::now();
     }
-
 
     // region STANDARD_CHECK_MPI
     #ifdef STANDARD_CHECK_MPI
