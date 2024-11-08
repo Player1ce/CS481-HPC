@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <vector>
+#include <iostream>
 
 namespace util::LibraryCode {
     template <typename T>
@@ -41,20 +42,17 @@ namespace util::LibraryCode {
 
         int groupSize = rows/numGroups;
         int overhang = rows%numGroups;
-        int previousOverhang = 0;
         int allocatedOverhang = 0;
 
         std::vector<std::pair<int, int>> rowGroups(numGroups);
 
         for (int i = 0; i < numGroups; i++) {
-            rowGroups.at(i) = std::make_pair(i*groupSize + previousOverhang, (i+1)*groupSize + allocatedOverhang);
+            int firstElement = i*groupSize + allocatedOverhang;
+            rowGroups.at(i) = std::make_pair(firstElement, firstElement + groupSize);
 
             if (i < overhang) {
                 rowGroups.at(i).second += 1;
-                previousOverhang = 1;
                 allocatedOverhang++;
-            } else {
-                previousOverhang = 0;
             }
         }
 
