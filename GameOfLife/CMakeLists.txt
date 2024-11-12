@@ -24,3 +24,11 @@ target_link_libraries(GameOfLifeMPI
         PRIVATE MPI::MPI_CXX
         PRIVATE OpenMP::OpenMP_CXX
 )
+
+add_executable(GameOfLifeMPI_Kamal
+        GameOfLifeMPI_Kamal.cpp
+)
+
+target_link_libraries(GameOfLifeMPI_Kamal
+    PRIVATE MPI::MPI_CXX
+)
