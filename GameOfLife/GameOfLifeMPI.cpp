@@ -110,11 +110,11 @@ vector<bool> test_secondIteration = {
 };
 
 vector<bool> initializer2 = {
-    false, false, false, false, false,
-    false, false, false, false, false,
+    true, false, false, false, false,
+    false, true, false, false, false,
     false, false, true, false, false,
-    false, false, false, false, false,
-    false, false, false, false, false
+    false, false, false, true, false,
+    false, false, false, false, true
 };
 
 auto tester2 = {
@@ -253,7 +253,6 @@ int main(int argc, char **argv) {
             test = tester2;
         }
     }
-
 
     if (world_size > rows) {
         cout << "ERROR: cannot have more processes than rows in the grid." << endl;
@@ -551,9 +550,6 @@ int main(int argc, char **argv) {
 
         offset = nextOffset;
         nextOffset = (offset + 1) % (maxOffset + 1);
-
-
-        // MPI_Barrier(MPI_COMM_WORLD);
 
         int noUpdate = rowsNoUpdates == numRowsReceived - overlap;
         MPI_Allreduce(&noUpdate, &exit, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
