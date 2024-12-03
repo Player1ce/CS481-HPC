@@ -1,0 +1,18 @@
+ 
+============================================================
+=====     Queued job information at submit time        =====
+============================================================
+  The submitted file is: test_hw4-10000.sh
+  The time limit is 1:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework4Submission
+  The memory limit is: 3gb
+  The job will start running after: 202412031038.37
+  Job Name: test-hw4-1000-2
+  Queue: -q class -W group_list=classq
+  Constraints: 
+  Command typed:
+/scripts/run_script_mpi test_hw4-10000.sh     
+  Queue submit command:
+qsub -q class -W group_list=classq -j oe -N test-hw4-1000-2 -a 202412031038.37 -r n -M mtorres3@crimson.ua.edu -l walltime=1:00:00 -l select=23:mpiprocs=1:mem=130mb 
+  Job number: 218555
+ 

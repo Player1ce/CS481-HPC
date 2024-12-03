@@ -1,0 +1,85 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: test_hw4-10000.sh
+  The time limit is 1:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework4Submission
+  The working directory is:  /scratch-local/ualclsd0201.test-hw4-1000-2.218555.asax-pbs1
+  The memory limit is: 3gb
+  The job will start running after: 202412031038.37
+  Job Name: test-hw4-1000-2
+  Queue: -q class -W group_list=classq
+  Constraints: 
+  Using  23  cores on master node  asax020.asc.edu
+  Node list:  asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu asax020.asc.edu
+  Cores:  23
+  Command typed:
+/scripts/run_script_mpi test_hw4-10000.sh     
+  Queue submit command:
+qsub -q class -W group_list=classq -j oe -N test-hw4-1000-2 -a 202412031038.37 -r n -M mtorres3@crimson.ua.edu -l walltime=1:00:00 -l select=23:mpiprocs=1:mem=130mb 
+ 
+
+The following have been reloaded with a version change:
+  1) gcc/11.3.0-o2cd4vz => gcc/12.3.0-rwmy6jl
+  2) gmp/6.2.1-sh44noy => gmp/6.2.1-vio2wnh
+  3) mpc/1.1.0-mheibzt => mpc/1.3.1-4fxtftl
+  4) mpfr/3.1.6-3ojkize => mpfr/4.2.0-hlmrah7
+  5) zstd/1.4.5-44sthnv => zstd/1.4.5
+
+
+The following have been reloaded with a version change:
+  1) cuda/12.6.0 => cuda/11.7.0     2) nvhpc/24.7 => nvhpc/23.3
+
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax020.asc.edu:2799442] 19 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax020.asc.edu:2799442] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using size: 10000 and iterations: 5000 and numProcesses: 20
+System took: 119.306 seconds to run
+percent: 50.0037%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax020.asc.edu:2799597] 19 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax020.asc.edu:2799597] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using size: 10000 and iterations: 5000 and numProcesses: 20
+System took: 95.208 seconds to run
+percent: 50.0037%
+--------------------------------------------------------------------------
+The library attempted to open the following supporting CUDA libraries,
+but each of them failed.  CUDA-aware support is disabled.
+libcuda.so.1: cannot open shared object file: No such file or directory
+libcuda.dylib: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.so.1: cannot open shared object file: No such file or directory
+/usr/lib64/libcuda.dylib: cannot open shared object file: No such file or directory
+If you are not interested in CUDA-aware support, then run with
+--mca mpi_cuda_support 0 to suppress this message.  If you are interested
+in CUDA-aware support, then try setting LD_LIBRARY_PATH to the location
+of libcuda.so.1 to get passed this issue.
+--------------------------------------------------------------------------
+[asax020.asc.edu:2799696] 19 more processes have sent help message help-mpi-common-cuda.txt / dlopen failed
+[asax020.asc.edu:2799696] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Using size: 10000 and iterations: 5000 and numProcesses: 20
+System took: 94.355 seconds to run
+percent: 50.0037%
