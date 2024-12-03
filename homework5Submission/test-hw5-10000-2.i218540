@@ -1,0 +1,18 @@
+ 
+============================================================
+=====     Queued job information at submit time        =====
+============================================================
+  The submitted file is: test_hw5-5000.sh
+  The time limit is 01:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework5Submission
+  The memory limit is: 1gb
+  The job will start running after: 202412031010.36
+  Job Name: test-hw5-10000-2
+  Queue: -q classgpu
+  Constraints: 
+  Command typed:
+/scripts/run_gpu test_hw5-5000.sh     
+  Queue submit command:
+qsub -q classgpu -j oe -N test-hw5-10000-2 -a 202412031010.36 -r n -M mtorres3@crimson.ua.edu -l walltime=01:00:00 -l select=1:ngpus=1:ncpus=1:mpiprocs=1:mem=1000mb 
+  Job number: 218540
+ 
