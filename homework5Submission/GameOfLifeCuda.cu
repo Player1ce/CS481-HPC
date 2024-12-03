@@ -11,6 +11,7 @@
 
 #include <cuda_runtime.h>
 
+#include <stdio.h>
 #include <random>
 #include <iostream>
 #include <sstream>
@@ -141,23 +142,34 @@ auto tester2 = {
 // TODO:  coalesce cols no updates efficiently using tree architecture?
 // TODO:  store offset calculation in shared memory and only update in master thread
 __global__ void standard_check_cuda(int *boards, const int board_rows, const int board_columns, int board_border,
-                                    int *offset, int *nextOffset, int* cellsNoUpdate) {
-    // printf("r: %d, c: %d : %d %c", blockIdx.x, threadIdx.x, board[blockIdx.x * (blockDim.x + 2) + threadIdx.x + 1],
-    // '\n');
-
-    int InnerCellsNoUpdate = 0;
+                                    int offset, int nextOffset) {
 
     int allocation_rows = board_rows + 2 * board_border;
     int allocation_columns = board_columns + 2 * board_border;
 
-    int rawIndex = ((blockIdx.y * blockDim.x) + threadIdx.y) * allocation_columns +
+    // printf("r: %d, c: %d : %d %c", threadIdx.y, threadIdx.x, boards[(threadIdx.y + board_border) * allocation_columns + threadIdx.x + 1],
+    // '\n');
+
+    // printf("blockx: %d, blocky: %d \n", blockIdx.x, blockIdx.y);
+    int InnerCellsNoUpdate = 0;
+
+
+    int rawIndex = ((blockIdx.y * blockDim.x) + threadIdx.y + board_border) * allocation_columns +
                    /* account for vertical displacement */
                    board_border + /* border offset for the row won't get accounted for in vertical displacement */
                    (blockIdx.x * blockDim.x) + /* account for block horizontal displacement */
                    threadIdx.x; /* account for thread horizontal displacement */
 
-    int index = (*offset * (allocation_rows * allocation_columns)) + /* account for offset */
+
+    int index = (offset * (allocation_rows * allocation_columns)) + /* account for offset */
                 rawIndex;
+
+    // printf("rawIndex: %d | index = %d | index limit: %d \n",
+    //         rawIndex, index,
+    //         allocation_rows * allocation_columns - (board_border + allocation_columns));
+
+
+    __syncthreads();
 
     int update = 0;
     if (rawIndex < (allocation_rows * allocation_columns - (board_border + allocation_columns))) {
@@ -165,36 +177,25 @@ __global__ void standard_check_cuda(int *boards, const int board_rows, const int
         // int lowerRow = index + allocation_columns;
         // int upperRow = index - allocation_columns;
 
-        int value = boards[index - allocation_columns - 1] + boards[index - allocation_columns] + boards[
-                        index - allocation_columns + 1]
+        int value = boards[index - allocation_columns - 1] + boards[index - allocation_columns] + boards[index - allocation_columns + 1]
                     + boards[index - 1] + boards[index + 1]
-                    + boards[index + allocation_columns - 1] + boards[index + allocation_columns] + boards[
-                        index + allocation_columns + 1];
+                    + boards[index + allocation_columns  - 1] + boards[index + allocation_columns] + boards[index + allocation_columns + 1];
 
         int oldVal = boards[index];
         int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
         // set next cell
-        boards[(*nextOffset * (allocation_rows * allocation_columns)) + rawIndex] = newVal;
+        boards[(nextOffset * (allocation_rows * allocation_columns)) + rawIndex] = newVal;
 
         // TODO: implement efficient update collection. Otherwise this will serialize
         update = oldVal == newVal;
     }
 
 
-
-
-
     // TODO: implement check for master thread
     // innerRowsNoUpdates += innerColsNoUpdates == columns;
     // innerColsNoUpdates = 0;
     //                cout << endl;
-
-
-#pragma omp critical
-    {
-        rowsNoUpdates += innerRowsNoUpdates;
-    }
 }
 
 // theirs
@@ -213,8 +214,8 @@ __global__ void standard_check_cuda(int *boards, const int board_rows, const int
 //#define EARLY_STOP_LOGGING
 
 
-#define STANDARD_CHECK
-//#define STANDARD_CHECK_OMP
+// #define STANDARD_CHECK
+// #define STANDARD_CHECK_OMP
 #define STANDARD_CHECK_CUDA
 //#define STANDARD_CHECK_CUDA_NONBLOCKING
 
@@ -357,7 +358,6 @@ int main(int argc, char **argv) {
 
     bool updateOccurred = true;
 
-
     chrono::time_point<chrono::system_clock> start, end;
 
     // region cuda_initialization
@@ -366,13 +366,12 @@ int main(int argc, char **argv) {
 
     // get gpu properties
     int deviceId = 0; // Assuming you want to query the first GPU
-    cudaDeviceProp deviceProp;
+    cudaDeviceProp deviceProp{};
     cudaGetDeviceProperties(&deviceProp, deviceId);
 
     int min_block_size = 128;
     int min_width = 32;
     int min_height = 4;
-
 
     // create dimensions for Cuda code:
     dim3 gridDimensions_2D;
@@ -386,7 +385,7 @@ int main(int argc, char **argv) {
         blockDimensions_2D.y = min_height;
     }
 
-    gridDimensions_2D.x = std::ceil(rows / blockDimensions_2D.x);
+    gridDimensions_2D.x = std::ceil(static_cast<float>(rows) / static_cast<float>(blockDimensions_2D.x));
     gridDimensions_2D.y = std::ceil(columns / blockDimensions_2D.y);
 
     int minGridSize;
@@ -522,9 +521,9 @@ int main(int argc, char **argv) {
         //region standard_check_cuda
 #ifdef STANDARD_CHECK_CUDA
 
-        // standard_check_cuda<<<gridDimensions_2D,blockDimensions_2D>>>(d_boards);
+        standard_check_cuda<<<gridDimensions_2D,blockDimensions_2D>>>(d_boards, rows, columns, border, offset, nextOffset);
 
-        // cudaDeviceSynchronize();
+        checkCudaError(cudaDeviceSynchronize());
 
 #endif
         // endregion
