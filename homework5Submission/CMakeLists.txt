@@ -6,9 +6,9 @@ project(GameOfLifeCuda LANGUAGES CXX CUDA)
 # Find CUDA
 find_package(CUDA REQUIRED)
 
-set(CUDA_ARCH_LIST "80;90" CACHE STRING "CUDA architectures to build for")
+set(CUDA_ARCH_LIST "80;90")
 
-set(CMAKE_CUDA_ARCHITECTURES "80;90" CACHE STRING "CUDA architectures to build for")
+set(CMAKE_CUDA_ARCHITECTURES "80;90" )
 
 enable_language(CUDA)
 
