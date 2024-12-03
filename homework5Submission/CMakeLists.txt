@@ -49,3 +49,14 @@ target_link_libraries(CudaTest
         PRIVATE ${CUDA_LIBRARIES}
 )
 
+
+add_executable(Homework3
+        GameOfLifeStandalone.cpp
+)
+
+target_link_libraries(Homework3
+        PUBLIC ${Boost_LIBRARIES}
+        PRIVATE OpenMP::OpenMP_CXX
+)
+
+

@@ -2,8 +2,8 @@
 // Created by motst on 10/3/2024.
 //
 
-#include "../util/LibraryCode.hpp"
-// #include "FileIO.hpp"
+#include "LibraryCode.hpp"
+#include "FileIO.hpp"
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -147,18 +147,21 @@ __global__ void standard_check_cuda(int *boards, const int board_rows, const int
     int allocation_rows = board_rows + 2 * board_border;
     int allocation_columns = board_columns + 2 * board_border;
 
-    // printf("r: %d, c: %d : %d %c", threadIdx.y, threadIdx.x, boards[(threadIdx.y + board_border) * allocation_columns + threadIdx.x + 1],
+    // printf("r: %d, c: %d : %d %c", (blockIdx.y * blockDim.y) + threadIdx.y , (blockIdx.x * blockDim.x) + threadIdx.x, boards[(threadIdx.y + board_border) * allocation_columns + threadIdx.x + 1],
     // '\n');
 
     // printf("blockx: %d, blocky: %d \n", blockIdx.x, blockIdx.y);
     int InnerCellsNoUpdate = 0;
 
 
-    int rawIndex = ((blockIdx.y * blockDim.x) + threadIdx.y + board_border) * allocation_columns +
+    int calculatedRow = (blockIdx.y * blockDim.y) + threadIdx.y;
+    int calculatedColumn = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+
+    int rawIndex = (calculatedRow + board_border) * allocation_columns +
                    /* account for vertical displacement */
                    board_border + /* border offset for the row won't get accounted for in vertical displacement */
-                   (blockIdx.x * blockDim.x) + /* account for block horizontal displacement */
-                   threadIdx.x; /* account for thread horizontal displacement */
+                   calculatedColumn; /* account for thread horizontal displacement */
 
 
     int index = (offset * (allocation_rows * allocation_columns)) + /* account for offset */
@@ -169,10 +172,10 @@ __global__ void standard_check_cuda(int *boards, const int board_rows, const int
     //         allocation_rows * allocation_columns - (board_border + allocation_columns));
 
 
-    __syncthreads();
+    // __syncthreads();
 
     int update = 0;
-    if (rawIndex < (allocation_rows * allocation_columns - (board_border + allocation_columns))) {
+    if (calculatedRow < board_rows && calculatedColumn < board_columns) {
         // TODO: test this
         // int lowerRow = index + allocation_columns;
         // int upperRow = index - allocation_columns;
@@ -385,8 +388,15 @@ int main(int argc, char **argv) {
         blockDimensions_2D.y = min_height;
     }
 
+    if (rows < blockDimensions_2D.y) {
+        blockDimensions_2D.y = rows;
+    }
+
+    // blockDimensions_2D.x = 1;
+    // blockDimensions_2D.y = 1;
+
     gridDimensions_2D.x = std::ceil(static_cast<float>(rows) / static_cast<float>(blockDimensions_2D.x));
-    gridDimensions_2D.y = std::ceil(columns / blockDimensions_2D.y);
+    gridDimensions_2D.y = std::ceil(static_cast<float>(columns) / static_cast<float>(blockDimensions_2D.y));
 
     int minGridSize;
     int blockSize;
@@ -597,51 +607,50 @@ int main(int argc, char **argv) {
 
     const double percent = (sum / static_cast<double>(rows * columns)) * 100.0;
     cout << "percent: " << percent << "%" << endl;
-    /*
-    // if (writeToFile) {
-    //     if (outputDirectory.back() != '/') {
-    //         outputDirectory.append("/");
-    //     }
-    //
-    //     std::stringstream fileName;
-    //     fileName << "output_" << rows << "x" << columns << "_" << iterations << "_";
-    //
-    //     int fileNum = 0;
-    //
-    //     auto filesInDirectory = file_io::listDirectory(outputDirectory);
-    //
-    //     //        cout << "Files in dir: ";
-    //     //        for (const auto& file : filesInDirectory) {
-    //     //            cout << file << " | ";
-    //     //        }
-    //     //        cout << endl;
-    //
-    //     //        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
-    //
-    //     while (std::find(filesInDirectory.begin(), filesInDirectory.end(),
-    //                      outputDirectory + fileName.str() + std::to_string(fileNum) + ".txt") != filesInDirectory.
-    //            end()) {
-    //         fileNum++;
-    //     }
-    //
-    //     fileName << fileNum << ".txt";
-    //
-    //     if (file_io::writeTofile(outputDirectory + fileName.str(),
-    //                              {arrayToString(_arrays[offset], rows, columns, border)})) {
-    //         cout << "successfully wrote output to file: " << outputDirectory << fileName.str() << endl;
-    //     } else {
-    //         cout << "Failed to write to file: " << outputDirectory << fileName.str() << endl;
-    //     }
-    // }
 
-    // if (useTestFile) {
-    //     std::string fileContents = file_io::readFullFile(outputDirectory + testFile);
-    //     //        cout << "file contents: " << endl << fileContents << endl;
-    //     //        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
-    //     bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
-    //     cout << "Test file was the same: " << success << endl;
-    // }
-    */
+    if (writeToFile) {
+        if (outputDirectory.back() != '/') {
+            outputDirectory.append("/");
+        }
+
+        std::stringstream fileName;
+        fileName << "output_" << rows << "x" << columns << "_" << iterations << "_";
+
+        int fileNum = 0;
+
+        auto filesInDirectory = file_io::listDirectory(outputDirectory);
+
+        //        cout << "Files in dir: ";
+        //        for (const auto& file : filesInDirectory) {
+        //            cout << file << " | ";
+        //        }
+        //        cout << endl;
+
+        //        cout << "test: " << outputDirectory << fileName.str() + std::to_string(fileNum) + ".txt" << endl;
+
+        while (std::find(filesInDirectory.begin(), filesInDirectory.end(),
+                         outputDirectory + fileName.str() + std::to_string(fileNum) + ".txt") != filesInDirectory.
+               end()) {
+            fileNum++;
+        }
+
+        fileName << fileNum << ".txt";
+
+        if (file_io::writeTofile(outputDirectory + fileName.str(),
+                                 {arrayToString(_arrays[offset], rows, columns, border)})) {
+            cout << "successfully wrote output to file: " << outputDirectory << fileName.str() << endl;
+        } else {
+            cout << "Failed to write to file: " << outputDirectory << fileName.str() << endl;
+        }
+    }
+
+    if (useTestFile) {
+        std::string fileContents = file_io::readFullFile(outputDirectory + testFile);
+        //        cout << "file contents: " << endl << fileContents << endl;
+        //        cout << "result of to string: " << endl << arrayToString(_arrays[offset], rows, columns, border) << endl;
+        bool success = fileContents == arrayToString(_arrays[offset], rows, columns, border) + "\n";
+        cout << boolalpha << "Test file was the same: " << success << endl;
+    }
 
     for (int i = 0; i < maxOffset; i++) {
         LibraryCode::deleteArray(_arrays[i]);
