@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
 
     cudaMalloc(&d_update_flag, sizeof(int));
 
-    int min_block_size = ;
+    int min_block_size = 128;
     int min_width = 32;
     int min_height = 4;
 
