@@ -18,7 +18,7 @@ numThreads=1;
 test_file="output_${board_size}x${board_size}_${iterations}_0.txt"
 
 board_size=10000
-iterations=10000
+iterations=5000
 test_file="output_${board_size}x${board_size}_${iterations}_0.txt"
 
 numThreads=1;
