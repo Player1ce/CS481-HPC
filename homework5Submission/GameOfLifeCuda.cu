@@ -227,12 +227,9 @@ __global__ void standard_check_cuda(int *boards, const int board_rows, const int
         update = oldVal != newVal;
     }
 
-    // atomicMax(&update_flag, update);
-
-
     int any_update = __any_sync(0xffffffff, update);
 
-    if (threadIdx.x == 0) {
+    if (threadIdx.x % 32 == 0) { // Execute the operation once per warp
         atomicMax(update_flag, any_update);
     }
 }
