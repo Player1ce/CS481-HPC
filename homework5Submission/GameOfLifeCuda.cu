@@ -140,52 +140,61 @@ auto tester2 = {
 // TODO:  store cols no updates in shared memory
 // TODO:  coalesce cols no updates efficiently using tree architecture?
 // TODO:  store offset calculation in shared memory and only update in master thread
-__global__ void standard_check_cuda(int* boards, const int board_rows, const int board_columns, int board_border, int* offset, int* nextOffset, int* colsNoUpdates) {
+__global__ void standard_check_cuda(int *boards, const int board_rows, const int board_columns, int board_border,
+                                    int *offset, int *nextOffset, int* cellsNoUpdate) {
     // printf("r: %d, c: %d : %d %c", blockIdx.x, threadIdx.x, board[blockIdx.x * (blockDim.x + 2) + threadIdx.x + 1],
-           // '\n');
+    // '\n');
 
     int InnerCellsNoUpdate = 0;
 
-    int allocation_rows = board_rows + 2*board_border;
-    int allocation_columns = board_columns + 2*board_border;
+    int allocation_rows = board_rows + 2 * board_border;
+    int allocation_columns = board_columns + 2 * board_border;
 
-    int rawIndex = ((blockIdx.y * blockDim.x) + threadIdx.y) * allocation_columns + /* account for vertical displacement */
+    int rawIndex = ((blockIdx.y * blockDim.x) + threadIdx.y) * allocation_columns +
+                   /* account for vertical displacement */
                    board_border + /* border offset for the row won't get accounted for in vertical displacement */
                    (blockIdx.x * blockDim.x) + /* account for block horizontal displacement */
                    threadIdx.x; /* account for thread horizontal displacement */
 
-    int index = ( *offset * (allocation_rows * allocation_columns) ) + /* account for offset */
+    int index = (*offset * (allocation_rows * allocation_columns)) + /* account for offset */
                 rawIndex;
 
-    // TODO: test this
-    // int lowerRow = index + allocation_columns;
-    // int upperRow = index - allocation_columns;
+    int update = 0;
+    if (rawIndex < (allocation_rows * allocation_columns - (board_border + allocation_columns))) {
+        // TODO: test this
+        // int lowerRow = index + allocation_columns;
+        // int upperRow = index - allocation_columns;
 
-    int value = boards[index - allocation_columns - 1] + boards[index - allocation_columns] + boards[index - allocation_columns + 1]
-                + boards[index - 1] + boards[index + 1]
-                + boards[index + allocation_columns - 1] + boards[index + allocation_columns] + boards[index + allocation_columns + 1];
+        int value = boards[index - allocation_columns - 1] + boards[index - allocation_columns] + boards[
+                        index - allocation_columns + 1]
+                    + boards[index - 1] + boards[index + 1]
+                    + boards[index + allocation_columns - 1] + boards[index + allocation_columns] + boards[
+                        index + allocation_columns + 1];
 
-    int oldVal = boards[index];
-    int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
+        int oldVal = boards[index];
+        int newVal = (value == 3) ? 1 : (value == 2) ? oldVal : 0;
 
-    // set next cell
-    boards[( *offset * (allocation_rows * allocation_columns) ) + rawIndex] = newVal;
+        // set next cell
+        boards[(*nextOffset * (allocation_rows * allocation_columns)) + rawIndex] = newVal;
 
-    // TODO: implement efficient update collection. Otherwise this will serialize
-    int update = oldVal == newVal;
+        // TODO: implement efficient update collection. Otherwise this will serialize
+        update = oldVal == newVal;
+    }
+
+
+
+
 
     // TODO: implement check for master thread
     // innerRowsNoUpdates += innerColsNoUpdates == columns;
     // innerColsNoUpdates = 0;
-        //                cout << endl;
+    //                cout << endl;
 
 
 #pragma omp critical
-        {
-            rowsNoUpdates += innerRowsNoUpdates;
-        }
+    {
+        rowsNoUpdates += innerRowsNoUpdates;
     }
-
 }
 
 // theirs
@@ -370,10 +379,9 @@ int main(int argc, char **argv) {
     dim3 blockDimensions_2D;
 
     if (rows * columns < min_block_size) {
-		blockDimensions_2D.x = rows;
+        blockDimensions_2D.x = rows;
         blockDimensions_2D.y = columns;
-    }
-    else {
+    } else {
         blockDimensions_2D.x = min_width;
         blockDimensions_2D.y = min_height;
     }
@@ -393,7 +401,6 @@ int main(int argc, char **argv) {
 
     cout << "block_x: " << blockDimensions_2D.x << endl;
     cout << "block_y: " << blockDimensions_2D.y << endl;
-
 
 
     // endregion
