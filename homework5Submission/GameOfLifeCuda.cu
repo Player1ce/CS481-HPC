@@ -1,6 +1,12 @@
-//
-// Created by motst on 10/3/2024.
-//
+/*
+Name:  Marcelo Torres
+Email:   mtorres3@crimson.ua.edu
+Course:  CS  481/581
+Homework #:  5
+To Compile: Run ./build.sh in the homework4Submission directory. NOTE: if you are not running on the HPC, you will
+           need to comment out the lines `module load intel` and `module load cmake`  and `module  load  openmpi/4.1.4-gcc11` in the build.sh file.
+To Run: Run ./Homework5 in the homework5Submission directory. Use `./Homework5 <board_size> <max_iterations> <num_threads> <output_directory(absolute or relative)> <test_file>`
+*/
 
 #include "LibraryCode.hpp"
 #include "FileIO.hpp"
