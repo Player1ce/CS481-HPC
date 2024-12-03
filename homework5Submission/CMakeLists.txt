@@ -6,6 +6,10 @@ project(GameOfLifeCuda LANGUAGES CXX CUDA)
 # Find CUDA
 find_package(CUDA REQUIRED)
 
+set(CUDA_ARCH_LIST "80;90" CACHE STRING "CUDA architectures to build for")
+
+enable_language(CUDA)
+
 # Find Boost
 find_package(Boost REQUIRED COMPONENTS filesystem system)
 
