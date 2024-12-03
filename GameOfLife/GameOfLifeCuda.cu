@@ -386,8 +386,8 @@ __global__ void standard_check_cuda_shared_cells(int *boards, const int board_ro
 //#define STANDARD_CHECK_CUDA_NONBLOCKING
 
 int main(int argc, char **argv) {
-    initializer = initializer2;
-    test = tester2;
+    // initializer = initializer2;
+    // test = tester2;
 
     int rows = 1000;
     int columns = rows;
@@ -540,7 +540,7 @@ int main(int argc, char **argv) {
 
     cudaMalloc(&d_update_flag, sizeof(int));
 
-    int min_block_size = ;
+    int min_block_size = 128;
     int min_width = 32;
     int min_height = 4;
 
