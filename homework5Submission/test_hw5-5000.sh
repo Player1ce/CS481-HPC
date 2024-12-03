@@ -9,7 +9,6 @@
 directory='validation/'
 board_size=1000
 iterations=1000
-
 test_file="output_${board_size}x${board_size}_${iterations}_0.txt"
 
 # Generate test file
