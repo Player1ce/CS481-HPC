@@ -383,7 +383,6 @@ __global__ void standard_check_cuda_shared_cells(int *boards, const int board_ro
 // #define STANDARD_CUDA
 // #define STANDARD_CHECK_CUDA
 #define STANDARD_CHECK_CUDA_SHARED_CELLS
-//#define STANDARD_CHECK_CUDA_NONBLOCKING
 
 int main(int argc, char **argv) {
     initializer = initializer2;
