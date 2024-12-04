@@ -1,0 +1,103 @@
+setting asax scratch directory
+ 
+============================================================
+=====         Summary of your GPU job                  =====
+============================================================
+  The script file is: test_hw5-5000.sh
+  The time limit is 01:00:00 HH:MM:SS.
+  The target directory is: /home/ualclsd0201/CS481-HPC/homework5Submission
+  The working directory is:  /scratch-local/ualclsd0201.test-hw5-baseline.218814.asax-pbs1
+  The memory limit is: 1gb
+  The job will start running after: 202412031546.45
+  Job Name: test-hw5-baseline
+  Queue: -q classgpu
+  Constraints: 
+  Using  1  cores on master node  asaxg002.asc.edu
+  Node list:  asaxg002.asc.edu
+  Cores:  1
+  Command typed:
+/scripts/run_gpu test_hw5-5000.sh     
+  Queue submit command:
+qsub -q classgpu -j oe -N test-hw5-baseline -a 202412031546.45 -r n -M mtorres3@crimson.ua.edu -l walltime=01:00:00 -l select=1:ngpus=1:ncpus=1:mpiprocs=1:mem=1000mb 
+ 
+Tue Dec  3 15:47:02 2024       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 560.28.03              Driver Version: 560.28.03      CUDA Version: 12.6     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:C1:00.0 Off |                    0 |
+| N/A   24C    P0             49W /  400W |       1MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+allocation size: 25020004
+grid_x: 81
+grid_y: 2500
+block_x: 32
+block_y: 4
+System took: 5.526 seconds to run
+percent: 50.0036%
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_14.txt
+Test file was the same: false
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+allocation size: 25020004
+grid_x: 81
+grid_y: 2500
+block_x: 32
+block_y: 4
+System took: 5.499 seconds to run
+percent: 50.0036%
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_15.txt
+Test file was the same: false
+Using rows: 5000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_5000x5000_5000_0.txt
+allocation size: 25020004
+grid_x: 81
+grid_y: 2500
+block_x: 32
+block_y: 4
+System took: 5.506 seconds to run
+percent: 50.0036%
+successfully wrote output to file: /scratch/ualclsd0201/output_5000x5000_5000_16.txt
+Test file was the same: false
+Using rows: 10000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_10000x10000_5000_0.txt
+allocation size: 100040004
+grid_x: 162
+grid_y: 5000
+block_x: 32
+block_y: 4
+System took: 21.128 seconds to run
+percent: 50.0037%
+successfully wrote output to file: /scratch/ualclsd0201/output_10000x10000_5000_3.txt
+Test file was the same: true
+Using rows: 10000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_10000x10000_5000_0.txt
+allocation size: 100040004
+grid_x: 162
+grid_y: 5000
+block_x: 32
+block_y: 4
+System took: 21.119 seconds to run
+percent: 50.0037%
+successfully wrote output to file: /scratch/ualclsd0201/output_10000x10000_5000_4.txt
+Test file was the same: true
+Using rows: 10000 and iterations: 5000 and numThreads: 1 and filePath: /scratch/ualclsd0201/ and test file name:output_10000x10000_5000_0.txt
+allocation size: 100040004
+grid_x: 162
+grid_y: 5000
+block_x: 32
+block_y: 4
+System took: 21.81 seconds to run
+percent: 50.0037%
+successfully wrote output to file: /scratch/ualclsd0201/output_10000x10000_5000_5.txt
+Test file was the same: true
+Cgroup mem limit exceeded: 
