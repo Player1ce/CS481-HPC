@@ -122,10 +122,6 @@ inline void updateCells(util::CellMatrix &matrix) {
     matrix.incrementOffset();
 }
 
-//TODO: Make a system that reserves acess to a certain set of indices then only apply mutexes to the overlapping ones
-//      Specifically, take advantage of the fact that only overlap on actual stored uint64_t values needs protection
-
-
 bool updateCells_UpdateTracked(util::CellMatrix &matrix) {
     // cout << "Update Started" << endl;
 
