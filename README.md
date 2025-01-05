@@ -30,7 +30,7 @@ approach and tested its performance. Results can be found in `reports/Homework2-
 - Output files for homework 2 are stored in `homework2Submission/test-results/`
 - Build instructions are at the top of `homework2Submission/GameOfLife.cpp`
 
-# Homework 3: Multithreading with OpenMP
+## Homework 3: Multithreading with OpenMP
 
 Homework 3 asked us to implement Conway's Game of Life using the OpenMP multithreading library.
 In this implementation, I made significant changes to the program's design. The structrue here is then repeated in the
@@ -46,7 +46,7 @@ file. Additionally, the logic to evaluate cell changes is simplified. These chan
 - Output files for homework 3 are stored in `homework3Submission/test-results/`
 - Build instructions are at the top of `homework3Submission/GameOfLifeStandalone.cpp`
 
-# Homework 4: Multiprocessing with MPI
+## Homework 4: Multiprocessing with MPI
 
 Homework 4 asked us to implement Conway's Game of Life using the Open MPI multiprocessing library. This implementation
 uses the structure from homework 3 as a baseline, but adds significant changes to accommodate the MPI framework. This
@@ -58,7 +58,7 @@ implementation outperforms all previous implementations. Results comparing perfo
 - Output files for homework 4 are stored in `homework4Submission/test-results/`
 - Build instructions are at the top of `homework4Submission/GameOfLifeStandalone.cpp`
 
-# Homework 5: Massive Multithreading with Cuda
+## Homework 5: Massive Multithreading with Cuda
 
 For this assignment, we implemented Conway's Game of Life using massive multithreading with CUDA. This version of the
 program outperformed all previous versions and reports of this performance can be found in the `reports` folder.
